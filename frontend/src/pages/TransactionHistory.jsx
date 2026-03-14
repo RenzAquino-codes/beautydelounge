@@ -1,0 +1,267 @@
+
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
+import { FaArrowLeft, FaPlus, FaTrash, FaCheckSquare, FaSquare, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+
+function TransactionHistory() {
+    const navigate = useNavigate();
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", status: "Paid" });
+    const [transactions, setTransactions] = useState([]);
+    const [services, setServices] = useState([]); // ✅ fetch from service pricing
+    const [clientError, setClientError] = useState('');
+    const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
+    const [confirmDelete, setConfirmDelete] = useState(null);
+
+    const [toast, setToast] = useState({ show: false, message: '', type: '' });
+    const showToast = (message, type = 'error') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("isLoggedIn");
+        navigate("/");
+    };
+
+    // Fetch transactions
+    useEffect(() => {
+        fetch("http://127.0.0.1:5000/api/transactions")
+            .then(res => res.json())
+            .then(data => setTransactions(data));
+    }, []);
+
+    // Fetch services from Service Pricing
+    useEffect(() => {
+        fetch("http://127.0.0.1:5000/api/services")
+            .then(res => res.json())
+            .then(data => setServices(data));
+    }, []);
+
+    // Handle service checkbox — only one can be selected at a time
+    const handleServiceSelect = (serviceName, servicePrice) => {
+        const alreadySelected = form.service.includes(serviceName);
+
+        let updatedServices;
+        if (alreadySelected) {
+            // Uncheck — remove from array
+            updatedServices = form.service.filter(s => s !== serviceName);
+        } else {
+            // Check — add to array
+            updatedServices = [...form.service, serviceName];
+        }
+
+        // Recalculate total from selected services
+        const newTotal = updatedServices.reduce((sum, name) => {
+            const found = services.find(s => s.name === name);
+            return sum + (found ? Number(found.price) : 0);
+        }, 0);
+
+        setForm({ ...form, service: updatedServices, amount: newTotal });
+    };
+
+    const handleSave = async () => {
+        if (!form.client || form.service.length === 0 || !form.amount)
+            return showToast("Please fill in all fields.");
+        if (!isValidName(form.client))
+            return showToast("Client name must contain letters only.");
+        const res = await fetch("http://127.0.0.1:5000/api/transactions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form)
+        });
+        const created = await res.json();
+        setTransactions([created, ...transactions]);
+        setShowForm(false);
+        setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+    };
+
+    const handleDelete = (id) => {
+        setConfirmDelete(id);
+    };
+
+    const confirmDeleteAction = async () => {
+        await fetch(`http://127.0.0.1:5000/api/transactions/${confirmDelete}`, { method: "DELETE" });
+        setTransactions(transactions.filter(t => t._id !== confirmDelete));
+        setConfirmDelete(null);
+        showToast("Transaction deleted.", "success");
+    };
+
+    const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+
+    return (
+        <div className="dashboard-container">
+            <aside className="sidebar">
+                <h2>BEA-UTY DE LOUNGE</h2>
+                <nav>
+                    <div className="nav-item" onClick={() => navigate("/dashboard")}>
+                        <FaArrowLeft /> <span>Back</span>
+                    </div>
+                    <div className="nav-item logout" onClick={handleLogout}>
+                        <HiArrowLeftEndOnRectangle /> <span>Logout</span>
+                    </div>
+                </nav>
+            </aside>
+
+            <main className="main-content">
+                <header className="dashboard-header">
+                    <h1>Transaction History</h1>
+                    <p>Total collected: <strong>₱{total.toLocaleString()}</strong></p>
+                </header>
+
+                <button className="add-btn" onClick={() => setShowForm(true)}>
+                    <FaPlus /> Add Transaction
+                </button>
+
+                {showForm && (
+                    <div className="modal-overlay">
+                        <div className="modal">
+                            <h3>Add Transaction</h3>
+
+                            <input
+                                placeholder="Client Name"
+                                value={form.client}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setForm({ ...form, client: val });
+                                    if (val && !isValidName(val)) {
+                                        setClientError("Letters only, no numbers or special characters.");
+                                    } else {
+                                        setClientError('');
+                                    }
+                                }}
+                                style={{ borderColor: clientError ? '#e74c3c' : '' }}
+                            />
+                            {clientError && <span style={{ fontSize: '12px', color: '#e74c3c', marginTop: '-8px' }}>{clientError}</span>}
+
+                            {/* Service Checklist */}
+                            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b5c45', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Select Service
+                            </label>
+                            <div className="service-checklist">
+                                {services.length === 0 ? (
+                                    <p style={{ fontSize: '13px', color: '#8c7a60' }}>No services available.</p>
+                                ) : (
+                                    services.map(service => (
+                                        <div
+                                            key={service._id}
+                                            className={`service-check-item ${form.service.includes(service.name) ? 'selected' : ''}`}
+                                            onClick={() => handleServiceSelect(service.name, service.price)}
+                                        >
+                                            <div className="service-check-box">
+                                                {form.service.includes(service.name)
+                                                    ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '18px' }} />
+                                                    : <FaSquare style={{ color: '#dcd5c9', fontSize: '18px' }} />
+                                                }
+                                            </div>
+                                            <div className="service-check-info">
+                                                <span className="service-check-name">{service.name}</span>
+                                                <span className="service-check-price">₱{service.price}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Amount auto-filled but editable */}
+                            <input
+                                placeholder="Amount (₱)"
+                                type="number"
+                                value={form.amount}
+                                onChange={e => setForm({ ...form, amount: e.target.value })}
+                            />
+
+                            <input
+                                placeholder="Date"
+                                type="date"
+                                value={form.date}
+                                onChange={e => setForm({ ...form, date: e.target.value })}
+                            />
+
+                            <select
+                                value={form.status}
+                                onChange={e => setForm({ ...form, status: e.target.value })}
+                            >
+                                <option>Paid</option>
+                                <option>Pending</option>
+                            </select>
+
+                            <div className="modal-actions">
+                                <button onClick={handleSave}>Save</button>
+                                <button className="cancel-btn" onClick={() => {
+                                    setShowForm(false);
+                                    setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+                                    setClientError('');
+                                }}>Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Service</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {transactions.map(t => (
+                            <tr key={t._id}>
+                                <td>{t.client}</td>
+                                <td>{Array.isArray(t.service) ? t.service.join(", ") : t.service}</td>
+                                <td>₱{t.amount}</td>
+                                <td>{t.date}</td>
+                                <td><span className={`status-badge ${t.status.toLowerCase()}`}>{t.status}</span></td>
+                                <td>
+                                    <button className="icon-btn delete" onClick={() => handleDelete(t._id)}>
+                                        <FaTrash />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </main>
+            {/* Confirm Delete Modal */}
+            {confirmDelete && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
+                        <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
+                        <h3 style={{ marginBottom: '8px' }}>Delete Transaction?</h3>
+                        <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>
+                            This action cannot be undone.
+                        </p>
+                        <div className="modal-actions">
+                            <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>
+                                Yes, Delete
+                            </button>
+                            <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast */}
+            {toast.show && (
+                <div className={`toast toast-${toast.type}`}>
+                    <span className="toast-icon">
+                        {toast.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
+                    </span>
+                    <span className="toast-message">{toast.message}</span>
+                </div>
+            )}
+
+        </div>
+    );
+}
+
+export default TransactionHistory;
