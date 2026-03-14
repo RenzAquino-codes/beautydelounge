@@ -11,7 +11,9 @@ const fs = require('fs');
 const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE;
 const pendingUsers = {};
 const crypto = require('crypto');
-const nodemailer = require('nodemailer'); // para sa gmail to boss ahahahahha
+const { Resend } = require('resend');
+
+// const nodemailer = require('nodemailer'); // para sa gmail to boss ahahahahha
 const bcrypt = require('bcrypt');
 
 const app = express();
@@ -35,20 +37,20 @@ mongoose.connect(process.env.MONGODB_URI)
 // SCHEMAS
 // =====================
 
-
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,          // 
-    secure: false,      // 
-    requireTLS: true,   // 
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false  // ✅ add this
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+// const transporter = nodemailer.createTransport({
+//     host: 'smtp.gmail.com',
+//     port: 587,          // 
+//     secure: false,      // 
+//     requireTLS: true,   // 
+//     auth: {
+//         user: process.env.GMAIL_USER,
+//         pass: process.env.GMAIL_PASS
+//     },
+//     tls: {
+//         rejectUnauthorized: false  // ✅ add this
+//     }
+// });
 const userSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     middleName: { type: String, required: true },
@@ -162,22 +164,36 @@ app.post("/api/register", async (req, res) => {
             expiresAt: Date.now() + 10 * 60 * 1000
         };
         //Eto yung gmail na mag c-chat sayo for verification code
-        await transporter.sendMail({
-            from: '"Beauty De Lounge" <renzfrancisaquino@gmail.com>',
+        // await transporter.sendMail({
+        //     from: '"Beauty De Lounge" <renzfrancisaquino@gmail.com>',
+        //     to: email,
+        //     subject: 'Your Verification Code',
+        //     html: `
+        //         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
+        //             <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
+        //             <p style="color: #6b5c45;">Thank you for registering! Use the code below to verify your email:</p>
+        //             <div style="text-align: center; margin: 30px 0;">
+        //                 <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
+        //             </div>
+        //             <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes.</p>
+        //         </div>
+        //     `
+        // });
+        await resend.emails.send({
+            from: 'Beauty De Lounge <onboarding@resend.dev>',
             to: email,
             subject: 'Your Verification Code',
             html: `
-                <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
-                    <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
-                    <p style="color: #6b5c45;">Thank you for registering! Use the code below to verify your email:</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
-                    </div>
-                    <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes.</p>
-                </div>
-            `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
+            <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
+            <p style="color: #6b5c45;">Thank you for registering! Use the code below to verify your email:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
+            </div>
+            <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes.</p>
+        </div>
+    `
         });
-
         res.json({
             message: "Verification code sent to your email."
         });
@@ -421,22 +437,36 @@ app.post("/api/forgot-password", async (req, res) => {
             expiresAt: Date.now() + 10 * 60 * 1000
         };
 
-        await transporter.sendMail({
-            from: '"Beauty De Lounge" <renzfrancisaquino@gmail.com>',
+        // await transporter.sendMail({
+        //     from: '"Beauty De Lounge" <renzfrancisaquino@gmail.com>',
+        //     to: email,
+        //     subject: 'Password Reset Code',
+        //     html: `
+        //         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
+        //             <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
+        //             <p style="color: #6b5c45;">You requested a password reset. Use the code below:</p>
+        //             <div style="text-align: center; margin: 30px 0;">
+        //                 <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
+        //             </div>
+        //             <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
+        //         </div>
+        //     `
+        // });
+        await resend.emails.send({
+            from: 'Beauty De Lounge <onboarding@resend.dev>',
             to: email,
             subject: 'Password Reset Code',
             html: `
-                <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
-                    <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
-                    <p style="color: #6b5c45;">You requested a password reset. Use the code below:</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
-                    </div>
-                    <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
-                </div>
-            `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
+            <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
+            <p style="color: #6b5c45;">You requested a password reset. Use the code below:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
+            </div>
+            <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
+        </div>
+    `
         });
-
         res.json({ message: "Reset code sent to your email." });
     } catch (err) {
         console.error("FORGOT PASSWORD ERROR:", err); // ✅ already there but check terminal
