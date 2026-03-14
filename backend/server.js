@@ -15,7 +15,13 @@ const nodemailer = require('nodemailer'); // para sa gmail to boss ahahahahha
 const bcrypt = require('bcrypt');
 
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: 'https://beautydelounge.vercel.app', // Your exact frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
     fs.mkdirSync(path.join(__dirname, 'uploads'));
