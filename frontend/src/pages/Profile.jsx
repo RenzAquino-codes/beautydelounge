@@ -43,7 +43,7 @@ function Profile() {
             };
             if (form.password) body.password = form.password;
 
-            const res = await fetch(`http://127.0.0.1:5000/api/users/${user._id}`, {
+            const res = await fetch(`https://beautydelounge-backend.onrender.com/api/users/${user._id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)

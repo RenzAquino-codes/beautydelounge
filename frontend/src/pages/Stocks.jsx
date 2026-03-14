@@ -38,7 +38,7 @@ function Stocks() {
         try {
             const formData = new FormData();
             formData.append('image', imageFile);
-            const res = await fetch('http://127.0.0.1:5000/api/upload', {
+            const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
                 method: 'POST',
                 body: formData
             });
@@ -75,7 +75,7 @@ function Stocks() {
     };
 
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/stocks")
+        fetch("https://beautydelounge-backend.onrender.com/api/stocks")
             .then(res => res.json())
             .then(data => setStocks(data));
     }, []);
@@ -86,7 +86,7 @@ function Stocks() {
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
             if (editingItem) {
-                const res = await fetch(`http://127.0.0.1:5000/api/stocks/${editingItem}`, {
+                const res = await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${editingItem}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(finalForm)
@@ -94,7 +94,7 @@ function Stocks() {
                 const updated = await res.json();
                 setStocks(stocks.map(s => s._id === editingItem ? updated : s));
             } else {
-                const res = await fetch("http://127.0.0.1:5000/api/stocks", {
+                const res = await fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(finalForm)
@@ -115,7 +115,7 @@ function Stocks() {
     };
 
     const confirmDeleteAction = async () => {
-        await fetch(`http://127.0.0.1:5000/api/stocks/${confirmDelete}`, { method: "DELETE" });
+        await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${confirmDelete}`, { method: "DELETE" });
         setStocks(stocks.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
         showToast("Item deleted.", "success");

@@ -41,7 +41,7 @@ function ServicePricing() {
         try {
             const formData = new FormData();
             formData.append('image', imageFile);
-            const res = await fetch('http://127.0.0.1:5000/api/upload', {
+            const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
                 method: 'POST',
                 body: formData
             });
@@ -72,7 +72,7 @@ function ServicePricing() {
     };
 
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/services")
+        fetch("https://beautydelounge-backend.onrender.com/api/services")
             .then(res => res.json())
             .then(data => setServices(data));
     }, []);
@@ -83,7 +83,7 @@ function ServicePricing() {
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
             if (editingItem) {
-                const res = await fetch(`http://127.0.0.1:5000/api/services/${editingItem}`, {
+                const res = await fetch(`https://beautydelounge-backend.onrender.com/api/services/${editingItem}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(finalForm)
@@ -91,7 +91,7 @@ function ServicePricing() {
                 const updated = await res.json();
                 setServices(services.map(s => s._id === editingItem ? updated : s));
             } else {
-                const res = await fetch("http://127.0.0.1:5000/api/services", {
+                const res = await fetch("https://beautydelounge-backend.onrender.com/api/services", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(finalForm)
@@ -111,7 +111,7 @@ function ServicePricing() {
     };
 
     const confirmDeleteAction = async () => {
-        await fetch(`http://127.0.0.1:5000/api/services/${confirmDelete}`, { method: "DELETE" });
+        await fetch(`https://beautydelounge-backend.onrender.com/api/services/${confirmDelete}`, { method: "DELETE" });
         setServices(services.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
         showToast("Service deleted.", "success");

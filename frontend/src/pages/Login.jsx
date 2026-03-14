@@ -24,7 +24,7 @@ function Login() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch("http://127.0.0.1:5000/api/forgot-password", {
+            const res = await fetch("https://beautydelounge-backend.onrender.com/api/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: resetEmail })
@@ -49,7 +49,7 @@ function Login() {
             return showToast("Password must be at least 8 characters.", "error");
         setLoading(true);
         try {
-            const res = await fetch("http://127.0.0.1:5000/api/reset-password", {
+            const res = await fetch("https://beautydelounge-backend.onrender.com/api/reset-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -85,7 +85,7 @@ function Login() {
         setLoading(true);
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/api/login", {
+            const response = await fetch("https://beautydelounge-backend.onrender.com/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", },
                 body: JSON.stringify({ email, password }),

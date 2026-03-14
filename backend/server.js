@@ -375,7 +375,7 @@ const upload = multer({ storage });
 // Image upload route
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    res.json({ imageUrl: `http://127.0.0.1:5000/uploads/${req.file.filename}` });
+    res.json({ imageUrl: `https://beautydelounge-backend.onrender.com/uploads/${req.file.filename}` });
 });
 
 app.put("/api/users/:id", async (req, res) => {

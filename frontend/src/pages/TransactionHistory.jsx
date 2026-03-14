@@ -28,14 +28,14 @@ function TransactionHistory() {
 
     // Fetch transactions
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/transactions")
+        fetch("https://beautydelounge-backend.onrender.com/api/transactions")
             .then(res => res.json())
             .then(data => setTransactions(data));
     }, []);
 
     // Fetch services from Service Pricing
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/services")
+        fetch("https://beautydelounge-backend.onrender.com/api/services")
             .then(res => res.json())
             .then(data => setServices(data));
     }, []);
@@ -67,7 +67,7 @@ function TransactionHistory() {
             return showToast("Please fill in all fields.");
         if (!isValidName(form.client))
             return showToast("Client name must contain letters only.");
-        const res = await fetch("http://127.0.0.1:5000/api/transactions", {
+        const res = await fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form)
@@ -83,7 +83,7 @@ function TransactionHistory() {
     };
 
     const confirmDeleteAction = async () => {
-        await fetch(`http://127.0.0.1:5000/api/transactions/${confirmDelete}`, { method: "DELETE" });
+        await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, { method: "DELETE" });
         setTransactions(transactions.filter(t => t._id !== confirmDelete));
         setConfirmDelete(null);
         showToast("Transaction deleted.", "success");
