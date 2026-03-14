@@ -427,8 +427,8 @@ app.post("/api/forgot-password", async (req, res) => {
 
         res.json({ message: "Reset code sent to your email." });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
+        console.error("FORGOT PASSWORD ERROR:", err); // ✅ already there but check terminal
+        res.status(500).json({ error: err.message }); // ✅ change this to show real error
     }
 });
 
@@ -451,12 +451,13 @@ app.post("/api/reset-password", async (req, res) => {
         delete resetCodes[email];
         res.json({ message: "Password reset successfully!" });
     } catch (err) {
-        res.status(500).json({ error: "Server error" });
+        console.error("RESET PASSWORD ERROR:", err);
+        res.status(500).json({ error: err.message }); // ✅ show real error
     }
 });
 app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
 });
-app.listen(process.env.PORT || 5000, () => 
+app.listen(process.env.PORT || 5000, () =>
     console.log(`Server running on port ${process.env.PORT || 5000}`)
 );
