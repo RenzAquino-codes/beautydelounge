@@ -317,3 +317,36 @@ button:disabled {
         transform: scale(1);
     }
 }
+@media (max-width: 768px) {
+    .register-split-container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+    .register-left {
+        flex: none;
+        height: 200px;
+        padding: 20px;
+    }
+    .hero-logo {
+        width: 50%;
+        max-width: 180px;
+    }
+    .register-right {
+        flex: 1;
+        padding: 24px 20px;
+        min-height: calc(100vh - 200px);
+    }
+    .form-container {
+        padding: 28px 20px;
+        max-width: 100%;
+    }
+    .form-container h2 {
+        font-size: 28px;
+    }
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+

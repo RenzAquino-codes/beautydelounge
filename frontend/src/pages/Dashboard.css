@@ -783,3 +783,163 @@
     display: flex;
     gap: 4px;
 }
+
+/* =====================
+   MOBILE RESPONSIVE
+===================== */
+@media (max-width: 768px) {
+
+    /* Sidebar becomes top navbar */
+    .dashboard-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 16px 20px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        border-right: none;
+        border-bottom: 1px solid #d9cfc0;
+    }
+
+    .sidebar h2 {
+        font-size: 11px;
+        margin-bottom: 0;
+        letter-spacing: 1.5px;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .sidebar nav {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .nav-item {
+        padding: 8px 10px;
+        font-size: 12px;
+        gap: 6px;
+    }
+
+    .nav-item span {
+        display: none; /* hide text, show only icons on mobile */
+    }
+
+    /* Main content */
+    .main-content {
+        padding: 20px 16px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 24px;
+    }
+
+    .dashboard-header p {
+        font-size: 14px;
+    }
+
+    /* Module cards */
+    .module-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .module-card {
+        padding: 20px 16px;
+    }
+
+    .module-card h2 {
+        font-size: 15px;
+    }
+
+    /* Stock cards */
+    .stocks-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* Tables */
+    .data-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Modal */
+    .modal {
+        margin: 16px;
+        padding: 24px 16px;
+        max-width: calc(100vw - 32px);
+    }
+
+    /* Add button */
+    .add-btn {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    /* Analytics */
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-summary {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* Profile */
+    .profile-card {
+        padding: 24px 16px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* Toast */
+    .toast {
+        bottom: 20px;
+        right: 16px;
+        left: 16px;
+        min-width: unset;
+    }
+
+    /* Header top */
+    .header-top {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .datetime-display {
+        text-align: left;
+        width: 100%;
+    }
+
+    /* Success screen */
+    .success-logo img {
+        width: 120px;
+    }
+
+    .success-content h2 {
+        font-size: 22px;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 400px) {
+    .module-grid {
+        grid-template-columns: 1fr;
+    }
+    .stocks-grid {
+        grid-template-columns: 1fr;
+    }
+    .sidebar h2 {
+        display: none;
+    }
+}
