@@ -38,11 +38,15 @@ mongoose.connect(process.env.MONGODB_URI)
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // use SSL
+    port: 587,          // 
+    secure: false,      // 
+    requireTLS: true,   // 
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false  // ✅ add this
     }
 });
 const userSchema = new mongoose.Schema({
