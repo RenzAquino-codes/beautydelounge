@@ -11,7 +11,8 @@ const fs = require('fs');
 const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE;
 const pendingUsers = {};
 const crypto = require('crypto');
-const { Resend } = require('resend');
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // const nodemailer = require('nodemailer'); // para sa gmail to boss ahahahahha
 const bcrypt = require('bcrypt');
@@ -37,7 +38,7 @@ mongoose.connect(process.env.MONGODB_URI)
 // SCHEMAS
 // =====================
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 // const transporter = nodemailer.createTransport({
 //     host: 'smtp.gmail.com',
 //     port: 587,          // 
@@ -179,8 +180,8 @@ app.post("/api/register", async (req, res) => {
         //         </div>
         //     `
         // });
-        await resend.emails.send({
-            from: 'Beauty De Lounge <onboarding@resend.dev>',
+        await sgMail.send({
+            from: 'renzfrancisaquino@gmail.com',
             to: email,
             subject: 'Your Verification Code',
             html: `
@@ -452,8 +453,8 @@ app.post("/api/forgot-password", async (req, res) => {
         //         </div>
         //     `
         // });
-        await resend.emails.send({
-            from: 'Beauty De Lounge <onboarding@resend.dev>',
+        await sgMail.send({
+            from: 'renzfrancisaquino@gmail.com',
             to: email,
             subject: 'Password Reset Code',
             html: `
