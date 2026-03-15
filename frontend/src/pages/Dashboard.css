@@ -1008,25 +1008,25 @@
 }
 
 .search-container {
-    margin-top: 20px;
-    max-width: 400px;
+   flex: 2;
 }
 
 .search-input {
     width: 100%;
-    padding: 12px 18px;
-    border-radius: 25px; /* Rounded pill shape */
+    padding: 12px 20px;
+    border-radius: 10px;
     border: 1px solid #d9cfc0;
-    background: white;
+    background: #ffffff;
     font-size: 14px;
+    color: #3a3020;
     outline: none;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(74, 63, 47, 0.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
 .search-input:focus {
     border-color: #c9a84c;
-    box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
 }
 
 .no-results {
@@ -1039,27 +1039,41 @@
 
 .filter-controls {
     display: flex;
-    gap: 15px;
-    margin-top: 20px;
+    gap: 12px;
+    margin: 25px 0;
     align-items: center;
+    max-width: 600px;
 }
-
+.category-filter {
+    flex: 1; 
+}
 .filter-select {
-    padding: 12px 18px;
-    border-radius: 25px;
+  width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
     border: 1px solid #d9cfc0;
-    background: white;
+    background: #ffffff;
     color: #4a3f2f;
     font-size: 14px;
     cursor: pointer;
     outline: none;
-    box-shadow: 0 2px 8px rgba(74, 63, 47, 0.05);
+    appearance: none; /* Removes default browser arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23c9a84c' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: calc(100% - 15px) center;
+    padding-right: 40px;
+    transition: all 0.3s ease
 }
 
 .filter-select:focus {
     border-color: #c9a84c;
 }
-
+.filter-select:hover {
+    border-color: #c9a84c;
+}
+.add-btn {
+    margin-bottom: 30px;
+}
 /* On mobile, stack them */
 @media (max-width: 600px) {
     .filter-controls {
