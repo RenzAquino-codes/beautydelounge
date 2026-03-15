@@ -11,9 +11,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 
 function AdminRoute({ children }) {
     const user = JSON.parse(localStorage.getItem("user"));
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    if (isLoggedIn !== "true") return <Navigate to="/" />;
-    if (user?.role !== 'admin' && user?.role !== 'static-admin') return <Navigate to="/dashboard" />;
+    const token = localStorage.getItem("token"); 
+    if (!token) return <Navigate to="/" />; 
+    if (user?.role !== 'admin' && user?.role !== 'static-admin') return <Navigate to="/dashboard" />; 
     return children;
 }
 
@@ -34,7 +34,7 @@ function App() {
                 <Route path="/dashboard/service-pricing" element={<ServicePricing />} />
                 <Route path="/dashboard/transactions" element={<TransactionHistory />} />
                 <Route path="/dashboard/profile" element={<Profile />} />
-                {/* ✅ Analytics is now protected — staff gets redirected */}
+                {/*  Analytics is now protected — staff gets redirected */}
                 <Route path="/dashboard/analytics" element={
                     <AdminRoute>
                         <Analytics />
