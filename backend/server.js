@@ -7,12 +7,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE;
 const crypto = require('crypto');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const bcrypt = require('bcrypt');
 const app = express();
 app.use(cors({
@@ -22,11 +22,20 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
-    fs.mkdirSync(path.join(__dirname, 'uploads'));
-    console.log('uploads folder created ✅');
-}
-
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+;
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'beauty_de_lounge',
+        allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
+});
+const upload = multer({ storage })
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("Connected to MongoDB"))
     .catch((err) => console.error("Error connecting to MongoDB:", err));
@@ -102,25 +111,17 @@ const Transaction = mongoose.model("Transaction", transactionSchema);
 // AUTH MIDDLEWARE
 // =====================
 const verifyToken = (req, res, next) => {
-    // 1. Look for the token in the request headers
+    
     const authHeader = req.header("Authorization");
 
-    // 2. If there is no token, reject the request immediately
     if (!authHeader) {
         return res.status(401).json({ error: "Access denied. No token provided." });
     }
-
     try {
-        // 3. Tokens usually come in the format "Bearer <actual_token>". We just want the token part.
         const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
-
-        // 4. Verify the token using your secret key
         const verified = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
 
-        // 5. Attach the decoded user payload (id and role) to the request
         req.user = verified;
-
-        // 6. Pass the request to the actual route handler!
         next();
     } catch (err) {
         res.status(403).json({ error: "Invalid or expired token." });
@@ -380,18 +381,9 @@ app.delete("/api/transactions/:id", verifyToken, async (req, res) => {
     }
 });
 
-
-// Store uploaded images in /uploads folder
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-const upload = multer({ storage });
-
 app.post('/api/upload', verifyToken, upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    res.json({ imageUrl: `https://beautydelounge-backend.onrender.com/uploads/${req.file.filename}` });
+    res.json({ imageUrl: req.file.path }); 
 });
 
 app.put("/api/users/:id", verifyToken, async (req, res) => {
@@ -408,7 +400,6 @@ app.put("/api/users/:id", verifyToken, async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
-
 
 // STEP 1 — Request reset code
 app.post("/api/forgot-password", async (req, res) => {
