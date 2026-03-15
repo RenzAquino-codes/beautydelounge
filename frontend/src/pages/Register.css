@@ -18,16 +18,16 @@ body {
 .register-left {
     flex: 1;
     background-color: #e1d7cd;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
+    overflow: hidden;
 }
 
 .hero-logo {
-    width: 80%;
-    max-width: 500px;
-    height: auto;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 /* RIGHT SIDE */
@@ -45,11 +45,11 @@ body {
     max-width: 460px;
     padding: 40px;
     border-radius: 16px;
-    background-color: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 8px 32px rgba(74, 66, 56, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.25); 
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px); 
+    border: 1px solid rgba(255, 255, 255, 0.4); 
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .form-container h2 {
@@ -178,29 +178,6 @@ button:disabled {
     gap: 6px;
 }
 
-/* .password-rules li {
-    font-size: 12px;
-}
-
-.rule-pass {
-    color: #8a6d1e;
-}
-
-.rule-fail {
-    color: #e74c3c;
-} */
-.password-rules {
-    list-style: none;
-    padding: 10px 12px;
-    margin: 8px 0 0;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 8px;
-    border: 1px solid #dcd5c9;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
 .password-rules li {
     font-size: 12px;
     display: flex;
@@ -208,38 +185,12 @@ button:disabled {
 }
 
 .rule-pass {
-    color: #c9a84c;
+    /* color: #c9a84c; */
+    color: green;
 }
 
 .rule-fail {
     color: #c0a898;
-}
-
-
-/* MOBILE */
-@media (max-width: 768px) {
-    .register-split-container {
-        flex-direction: column;
-    }
-
-    .register-left {
-        flex: 0.35;
-    }
-
-    .hero-logo {
-        width: 60%;
-        max-width: 250px;
-    }
-
-    .register-right {
-        flex: 0.65;
-        padding: 24px;
-    }
-
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
 }
 
 .login-success-screen {
@@ -317,36 +268,43 @@ button:disabled {
         transform: scale(1);
     }
 }
+
 @media (max-width: 768px) {
     .register-split-container {
         flex-direction: column;
         height: auto;
         min-height: 100vh;
     }
+
     .register-left {
         flex: none;
         height: 200px;
-        padding: 20px;
+        padding: 0; 
     }
+
     .hero-logo {
-        width: 50%;
-        max-width: 180px;
+        width: 100%;
+        height: 100%;
+        max-width: none;
     }
+
     .register-right {
         flex: 1;
         padding: 24px 20px;
         min-height: calc(100vh - 200px);
     }
+
     .form-container {
         padding: 28px 20px;
         max-width: 100%;
     }
+
     .form-container h2 {
         font-size: 28px;
     }
+
     .form-row {
         flex-direction: column;
         gap: 0;
     }
 }
-

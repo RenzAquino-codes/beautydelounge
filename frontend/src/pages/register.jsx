@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import "./Register.css";
 import { Link, useNavigate } from 'react-router-dom';
-import logo from './beautydeloungeLOGO.jpg';
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import logo2 from './Groom1.png';
 import loungeBg from './lounge.png';
 
 function Register() {
@@ -22,6 +22,12 @@ function Register() {
     const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
     const [registerSuccess, setRegisterSuccess] = useState(false);
     const navigate = useNavigate();
+    const [toast, setToast] = useState({ show: false, message: '', type: '' });
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
+    };
 
     const validateForm = () => {
         const newErrors = {};
@@ -63,12 +69,13 @@ function Register() {
             if (response.ok) {
                 setPendingEmail(email);
                 setStep(2);
+                showToast("Verification code sent to your email!", "success");
             } else {
-                alert(data.error);
+                showToast(data.error, "error");
             }
         } catch (error) {
             console.error(error);
-            alert("Server Error");
+            showToast("Server Error", "error");
         }
         setLoading(false);
     };
@@ -90,10 +97,10 @@ function Register() {
                     navigate("/");
                 }, 2500);
             } else {
-                alert(data.error);
+                showToast(data.error, "error");
             }
         } catch (error) {
-            alert("Server Error");
+            showToast("Server Error", "error");
         }
         setLoading(false);
     };
@@ -102,7 +109,7 @@ function Register() {
             <div className="login-success-screen">
                 <div className="success-content">
                     <div className="success-logo">
-                        <img src={logo} alt="Beauty De Lounge" />
+                        <img src={logo2} alt="Beauty De Lounge" />
                     </div>
                     <div className="success-spinner"></div>
                     <h2>Account Created!</h2>
@@ -116,7 +123,7 @@ function Register() {
         <div className="register-split-container">
             {/* LEFT SIDE - Branding */}
             <div className="register-left">
-                <img src={logo} alt="Beauty De Lounge" className="hero-logo" />
+                <img src={logo2} alt="Beauty De Lounge" className="hero-logo" />
             </div>
 
             {/* RIGHT SIDE - Form */}
@@ -208,7 +215,7 @@ function Register() {
                                         style={{ borderColor: errors.password ? '#e74c3c' : passwordFocused && isPasswordValid() ? '#c9a84c' : '' }}
                                         required
                                     />
-                                    {/* ✅ Hidden admin code toggle */}
+                                    {/* Hidden admin code toggle */}
                                     <div style={{ textAlign: 'right', marginBottom: '8px' }}>
                                         <button
                                             type="button"
@@ -239,17 +246,8 @@ function Register() {
                                             />
                                         </div>
                                     )}
-                                    {/* 
-                                    {(passwordFocused || password) && (
-                                        <ul className="password-rules">
-                                            {passwordRules.map((rule, i) => (
-                                                <li key={i} className={rule.test(password) ? 'rule-pass' : 'rule-fail'}>
-                                                    {rule.test(password) ? '✅' : '❌'} {rule.label}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )} */}
-                                    {/* {(passwordFocused || password) && (
+                                     
+                                     {(passwordFocused || password) && (
                                         <ul className="password-rules">
                                             {passwordRules.map((rule, i) => (
                                                 <li key={i} className={rule.test(password) ? 'rule-pass' : 'rule-fail'}>
@@ -261,7 +259,7 @@ function Register() {
                                                 </li>
                                             ))}
                                         </ul>
-                                    )} */}
+                                    )} 
                                 </div>
 
                                 <button type="submit" disabled={loading}>
@@ -301,7 +299,6 @@ function Register() {
 
                             <p className="login-link">
                                 Wrong email?
-                                {/* <a href="#" onClick={() => setStep(1)} style={{ marginLeft: '5px' }}>Go back</a> */}
                                 <button
                                     onClick={() => setStep(1)}
                                     style={{
@@ -324,6 +321,14 @@ function Register() {
 
                 </div>
             </div>
+            {toast.show && (
+                <div className={`toast toast-${toast.type}`}>
+                    <span className="toast-icon">
+                        {toast.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
+                    </span>
+                    <span className="toast-message">{toast.message}</span>
+                </div>
+            )}
         </div>
     );
 }

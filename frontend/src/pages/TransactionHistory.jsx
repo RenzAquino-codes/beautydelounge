@@ -9,7 +9,7 @@ function TransactionHistory() {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", status: "Paid" });
     const [transactions, setTransactions] = useState([]);
-    const [services, setServices] = useState([]); // ✅ fetch from service pricing
+    const [services, setServices] = useState([]); 
     const [clientError, setClientError] = useState('');
     const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
     const [confirmDelete, setConfirmDelete] = useState(null);
@@ -27,17 +27,26 @@ function TransactionHistory() {
     };
 
     // Fetch transactions
+    // Fetch transactions
     useEffect(() => {
-        fetch("https://beautydelounge-backend.onrender.com/api/transactions")
+        const token = localStorage.getItem("token"); 
+        fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
+            headers: { "Authorization": `Bearer ${token}` } 
+        })
             .then(res => res.json())
-            .then(data => setTransactions(data));
+            .then(data => setTransactions(data))
+            .catch(err => console.error(err));
     }, []);
 
     // Fetch services from Service Pricing
     useEffect(() => {
-        fetch("https://beautydelounge-backend.onrender.com/api/services")
+        const token = localStorage.getItem("token"); 
+        fetch("https://beautydelounge-backend.onrender.com/api/services", {
+            headers: { "Authorization": `Bearer ${token}` } 
+        })
             .then(res => res.json())
-            .then(data => setServices(data));
+            .then(data => setServices(data))
+            .catch(err => console.error(err));
     }, []);
 
     // Handle service checkbox — only one can be selected at a time
@@ -67,26 +76,44 @@ function TransactionHistory() {
             return showToast("Please fill in all fields.");
         if (!isValidName(form.client))
             return showToast("Client name must contain letters only.");
-        const res = await fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form)
-        });
-        const created = await res.json();
-        setTransactions([created, ...transactions]);
-        setShowForm(false);
-        setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+            
+        try {
+            const token = localStorage.getItem("token"); 
+            const res = await fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
+                body: JSON.stringify(form)
+            });
+            const created = await res.json();
+            setTransactions([created, ...transactions]);
+            setShowForm(false);
+            setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+            showToast("Transaction saved.", "success"); 
+        } catch (err) {
+            showToast("Failed to save transaction.");
+        }
     };
 
     const handleDelete = (id) => {
         setConfirmDelete(id);
     };
 
-    const confirmDeleteAction = async () => {
-        await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, { method: "DELETE" });
-        setTransactions(transactions.filter(t => t._id !== confirmDelete));
-        setConfirmDelete(null);
-        showToast("Transaction deleted.", "success");
+   const confirmDeleteAction = async () => {
+        try {
+            const token = localStorage.getItem("token"); 
+            await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, { 
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` } 
+            });
+            setTransactions(transactions.filter(t => t._id !== confirmDelete));
+            setConfirmDelete(null);
+            showToast("Transaction deleted.", "success");
+        } catch (err) {
+            showToast("Failed to delete transaction.");
+        }
     };
 
     const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);

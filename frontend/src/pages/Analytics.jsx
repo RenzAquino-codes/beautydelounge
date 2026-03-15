@@ -33,20 +33,29 @@ function Analytics() {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const handleLogout = () => {
+   const handleLogout = () => {
         localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token"); 
         navigate("/");
     };
 
-    useEffect(() => {
-        fetch("https://beautydelounge-backend.onrender.com/api/transactions")
+  useEffect(() => {
+        const token = localStorage.getItem("token"); 
+        
+        fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
+            headers: {
+                "Authorization": `Bearer ${token}` 
+            }
+        })
             .then(res => res.json())
             .then(data => {
                 setTransactions(data);
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch(err => {
+                console.error("Failed to fetch analytics data", err);
+                setLoading(false);
+            });
     }, []);
 
     // Most availed services (count per service)

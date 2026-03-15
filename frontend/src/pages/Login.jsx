@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import "./Login.css";
 import { Link, useNavigate } from 'react-router-dom';
-import logo from './beautydeloungeLOGO.jpg';
 import loungeBg from './lounge.png'
+import logo2 from './Groom1.png';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 function Login() {
@@ -92,13 +92,12 @@ function Login() {
             });
             const data = await response.json();
             if (response.ok) {
+                localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
-                localStorage.setItem("isLoggedIn", "true");
                 setEmail('');
                 setPassword('');
-                setLoginSuccess(true); //show loading screen
+                setLoginSuccess(true); 
 
-                // Navigate after 2 seconds
                 setTimeout(() => {
                     navigate("/dashboard");
                 }, 2000);
@@ -117,7 +116,7 @@ function Login() {
             <div className="login-success-screen">
                 <div className="success-content">
                     <div className="success-logo">
-                        <img src={logo} alt="Beauty De Lounge" />
+                        <img src={logo2} alt="Beauty De Lounge" />
                     </div>
                     <div className="success-spinner"></div>
                     <h2>Welcome to Bea-uty De Lounge!</h2>
@@ -130,7 +129,7 @@ function Login() {
     return (
         <div className="login-split-container">
             <div className="login-left">
-                <img src={logo} alt="Beauty De Lounge" className="hero-logo" />
+                <img src={logo2} alt="Beauty De Lounge" className="hero-logo" />
             </div>
 
             <div className="login-right" style={{ backgroundImage: `url(${loungeBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -140,7 +139,7 @@ function Login() {
                     {forgotStep === 0 && (
                         <>
                             <h2>Sign in</h2>
-                            <p className="demo-text">Demo: <span>admin@test.com</span> / <span>admin123</span></p>
+                            
                             <form onSubmit={handleSubmit}>
                                 <div className="form-group">
                                     <label>Email</label>

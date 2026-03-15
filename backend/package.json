@@ -446,6 +446,7 @@
     "jsonfile": "^6.2.0",
     "jsonpath": "^1.2.1",
     "jsonpointer": "^5.0.1",
+    "jsonwebtoken": "^9.0.3",
     "jsx-ast-utils": "^3.3.5",
     "kareem": "^3.2.0",
     "keyv": "^4.5.4",

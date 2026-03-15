@@ -24,7 +24,7 @@ function Profile() {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
         navigate("/");
     };
 
@@ -36,6 +36,8 @@ function Profile() {
 
         setLoading(true);
         try {
+            const token = localStorage.getItem("token"); 
+            
             const body = {
                 firstName: form.firstName,
                 middleName: form.middleName,
@@ -45,10 +47,15 @@ function Profile() {
 
             const res = await fetch(`https://beautydelounge-backend.onrender.com/api/users/${user._id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
                 body: JSON.stringify(body)
             });
+            
             const data = await res.json();
+            
             if (res.ok) {
                 localStorage.setItem("user", JSON.stringify({ ...user, ...body }));
                 showToast("Profile updated successfully!", "success");
@@ -60,7 +67,6 @@ function Profile() {
         }
         setLoading(false);
     };
-
     return (
         <div className="dashboard-container">
             <aside className="sidebar">

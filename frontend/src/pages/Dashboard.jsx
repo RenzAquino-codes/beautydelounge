@@ -1,15 +1,22 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUser, FaBook } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import "./Dashboard.css";
-import { useState, useEffect } from "react";
 
 function Dashboard() {
     const navigate = useNavigate();
+    
+    // We only need the user object for displaying their name/role
     const user = JSON.parse(localStorage.getItem("user"));
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
     const [dateTime, setDateTime] = useState(new Date());
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token || !user) {
+            navigate("/");
+        }
+    }, [navigate, user]); 
 
     useEffect(() => {
         const timer = setInterval(() => setDateTime(new Date()), 1000);
@@ -24,28 +31,21 @@ function Dashboard() {
         hour: '2-digit', minute: '2-digit', second: '2-digit'
     });
 
-
-
-    if (isLoggedIn !== "true") {
-        navigate("/");
-        return null;
-    }
-
     const handleLogout = () => {
+  
+        localStorage.removeItem("token");
         localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
         navigate("/");
     };
-
 
     const allModules = [
         { title: "Stocks", path: "/dashboard/stocks" },
         { title: "Service Pricing", path: "/dashboard/service-pricing" },
         { title: "Transaction History", path: "/dashboard/transactions" },
-        { title: "Analytics", path: "/dashboard/analytics", adminOnly: true }, // ✅ flagged
+        { title: "Analytics", path: "/dashboard/analytics", adminOnly: true }, 
     ];
 
-    // ✅ Filter based on role
+
     const modules = allModules.filter(module => {
         if (module.adminOnly) {
             return user?.role === 'admin' || user?.role === 'static-admin';
@@ -56,6 +56,8 @@ function Dashboard() {
     const handleModuleClick = (path) => {
         navigate(path);
     };
+
+    if (!user) return null;
 
     return (
         <div className="dashboard-container">

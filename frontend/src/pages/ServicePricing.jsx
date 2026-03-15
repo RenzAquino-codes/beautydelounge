@@ -39,10 +39,14 @@ function ServicePricing() {
     const uploadImage = async () => {
         if (!imageFile) return null;
         try {
+            const token = localStorage.getItem("token"); 
             const formData = new FormData();
             formData.append('image', imageFile);
             const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
                 method: 'POST',
+                headers: {
+                    "Authorization": `Bearer ${token}` 
+                },
                 body: formData
             });
             if (!res.ok) {
@@ -72,20 +76,31 @@ function ServicePricing() {
     };
 
     useEffect(() => {
-        fetch("https://beautydelounge-backend.onrender.com/api/services")
+        const token = localStorage.getItem("token"); 
+        fetch("https://beautydelounge-backend.onrender.com/api/services", {
+            headers: {
+                "Authorization": `Bearer ${token}` 
+            }
+        })
             .then(res => res.json())
-            .then(data => setServices(data));
+            .then(data => setServices(data))
+            .catch(err => console.error("Failed to fetch services", err));
     }, []);
 
-    const handleSave = async () => {
+   const handleSave = async () => {
         if (!form.name || !form.price) return showToast("Please fill in all fields.");
         try {
+            const token = localStorage.getItem("token"); 
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
+            
             if (editingItem) {
                 const res = await fetch(`https://beautydelounge-backend.onrender.com/api/services/${editingItem}`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` 
+                    },
                     body: JSON.stringify(finalForm)
                 });
                 const updated = await res.json();
@@ -93,7 +108,10 @@ function ServicePricing() {
             } else {
                 const res = await fetch("https://beautydelounge-backend.onrender.com/api/services", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` 
+                    },
                     body: JSON.stringify(finalForm)
                 });
                 const created = await res.json();
@@ -105,13 +123,18 @@ function ServicePricing() {
             showToast("Something went wrong. Please try again.");
         }
     };
-
     const handleDelete = (id) => {
         setConfirmDelete(id);
     };
 
-    const confirmDeleteAction = async () => {
-        await fetch(`https://beautydelounge-backend.onrender.com/api/services/${confirmDelete}`, { method: "DELETE" });
+   const confirmDeleteAction = async () => {
+        const token = localStorage.getItem("token"); 
+        await fetch(`https://beautydelounge-backend.onrender.com/api/services/${confirmDelete}`, { 
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}` 
+            }
+        });
         setServices(services.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
         showToast("Service deleted.", "success");

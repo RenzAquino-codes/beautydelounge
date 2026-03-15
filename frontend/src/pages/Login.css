@@ -1,6 +1,4 @@
-Center everything on the screen
-
-* {
+Center everything on the screen * {
     box-sizing: border-box;
 }
 
@@ -20,24 +18,24 @@ body {
 
 .login-left {
     flex: 1;
-    background-color: #e1d7cd; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
+    background-color: #e1d7cd;
+    overflow: hidden;
 }
 
 .hero-logo {
-    width: 80%;
-    max-width: 500px;
-    height: auto;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 
 .login-right {
     flex: 1;
-    
-    
+
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -47,18 +45,14 @@ body {
 
 .form-container {
     width: 100%;
-    max-width: 420px; 
+    max-width: 420px;
     padding: 40px;
     border-radius: 16px;
-    
-
-    background-color: rgba(255, 255, 255, 0.55); 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px); 
-    
-    
-    box-shadow: 0 8px 32px rgba(74, 66, 56, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.25); 
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px); 
+    border: 1px solid rgba(255, 255, 255, 0.4); 
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .form-container h2 {
@@ -128,7 +122,7 @@ button {
     margin-top: 10px;
     border: none;
     border-radius: 8px;
-    background-color: #1a1a1a; 
+    background-color: #1a1a1a;
     font-size: 15px;
     font-weight: 600;
     color: #ffffff;
@@ -200,6 +194,7 @@ button:disabled {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -224,22 +219,6 @@ button:disabled {
     text-decoration: underline;
 }
 
-
-@media (max-width: 768px) {
-    .login-split-container {
-        flex-direction: column; 
-    }
-    .login-left {
-        flex: 0.4;
-    }
-    .hero-logo {
-        width: 60%;
-        max-width: 250px;
-    }
-    .login-right {
-        flex: 0.6;
-    }
-}
 
 /* =====================
    LOGIN SUCCESS SCREEN
@@ -294,45 +273,67 @@ button:disabled {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.85); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
+
 @media (max-width: 768px) {
     .login-split-container {
         flex-direction: column;
         height: auto;
         min-height: 100vh;
     }
+
     .login-left {
         flex: none;
         height: 200px;
-        padding: 20px;
+        padding: 0; 
     }
+
     .hero-logo {
-        width: 50%;
-        max-width: 180px;
+        width: 100%;
+        height: 100%;
+        max-width: none;
     }
+
     .login-right {
         flex: 1;
         padding: 24px 20px;
         min-height: calc(100vh - 200px);
     }
+
     .form-container {
         padding: 28px 20px;
         max-width: 100%;
     }
+
     .form-container h2 {
         font-size: 28px;
     }
+
     .toast {
         bottom: 20px;
         right: 16px;

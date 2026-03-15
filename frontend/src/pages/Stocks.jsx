@@ -36,10 +36,14 @@ function Stocks() {
     const uploadImage = async () => {
         if (!imageFile) return null;
         try {
+            const token = localStorage.getItem("token"); 
             const formData = new FormData();
             formData.append('image', imageFile);
             const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
                 method: 'POST',
+                headers: {
+                    "Authorization": `Bearer ${token}` 
+                },
                 body: formData
             });
             if (!res.ok) {
@@ -75,20 +79,31 @@ function Stocks() {
     };
 
     useEffect(() => {
-        fetch("https://beautydelounge-backend.onrender.com/api/stocks")
+        const token = localStorage.getItem("token"); 
+        fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
+            headers: {
+                "Authorization": `Bearer ${token}` 
+            }
+        })
             .then(res => res.json())
-            .then(data => setStocks(data));
+            .then(data => setStocks(data))
+            .catch(err => console.error("Failed to fetch stocks", err));
     }, []);
 
-    const handleSave = async () => {
+  const handleSave = async () => {
         if (!form.name || !form.quantity) return showToast("Please fill in all fields.");
         try {
+            const token = localStorage.getItem("token"); 
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
+            
             if (editingItem) {
                 const res = await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${editingItem}`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` 
+                    },
                     body: JSON.stringify(finalForm)
                 });
                 const updated = await res.json();
@@ -96,7 +111,10 @@ function Stocks() {
             } else {
                 const res = await fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` 
+                    },
                     body: JSON.stringify(finalForm)
                 });
                 const created = await res.json();
@@ -114,8 +132,14 @@ function Stocks() {
         setConfirmDelete(id);
     };
 
-    const confirmDeleteAction = async () => {
-        await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${confirmDelete}`, { method: "DELETE" });
+   const confirmDeleteAction = async () => {
+        const token = localStorage.getItem("token"); 
+        await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${confirmDelete}`, { 
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}` 
+            }
+        });
         setStocks(stocks.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
         showToast("Item deleted.", "success");
@@ -124,8 +148,8 @@ function Stocks() {
     const openEdit = (item) => {
         setForm(item);
         setEditingItem(item._id);
-        setImagePreview(item.imageUrl || ''); // ✅ show existing image
-        setImageFile(null);                   // ✅ reset file input
+        setImagePreview(item.imageUrl || ''); 
+        setImageFile(null);                  
         setShowForm(true);
     };
 
