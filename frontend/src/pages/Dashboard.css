@@ -931,6 +931,143 @@
     }
 }
 
+.alert-banner {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.alert-banner:hover {
+    transform: scale(1.01);
+}
+
+.alert-icon {
+    color: #e53e3e;
+    font-size: 20px;
+}
+
+.alert-banner span {
+    color: #c53030;
+    flex: 1;
+    font-size: 14px;
+}
+
+.view-btn {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.7); /* Light blur background */
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Ensures it stays on top of everything */
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #ede5d8;
+    border-top: 5px solid #c9a84c; /* Your Gold Theme Color */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 15px;
+    color: #4a3f2f;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.search-container {
+    margin-top: 20px;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 25px; /* Rounded pill shape */
+    border: 1px solid #d9cfc0;
+    background: white;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(74, 63, 47, 0.05);
+}
+
+.search-input:focus {
+    border-color: #c9a84c;
+    box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
+}
+
+.no-results {
+    text-align: center;
+    color: #8c7a60;
+    padding: 40px;
+    grid-column: 1 / -1; /* Stretch across the grid */
+    font-style: italic;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 12px 18px;
+    border-radius: 25px;
+    border: 1px solid #d9cfc0;
+    background: white;
+    color: #4a3f2f;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(74, 63, 47, 0.05);
+}
+
+.filter-select:focus {
+    border-color: #c9a84c;
+}
+
+/* On mobile, stack them */
+@media (max-width: 600px) {
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
 /* Extra small phones */
 @media (max-width: 400px) {
     .module-grid {

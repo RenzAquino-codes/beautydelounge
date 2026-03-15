@@ -13,7 +13,9 @@ function ServicePricing() {
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
-
+    const [isSaving, setIsSaving] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("All");
     const showToast = (message, type = 'error') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
@@ -39,13 +41,13 @@ function ServicePricing() {
     const uploadImage = async () => {
         if (!imageFile) return null;
         try {
-            const token = localStorage.getItem("token"); 
+            const token = localStorage.getItem("token");
             const formData = new FormData();
             formData.append('image', imageFile);
             const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
                 method: 'POST',
                 headers: {
-                    "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}`
                 },
                 body: formData
             });
@@ -63,7 +65,7 @@ function ServicePricing() {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
         navigate("/");
     };
 
@@ -76,10 +78,10 @@ function ServicePricing() {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/services", {
             headers: {
-                "Authorization": `Bearer ${token}` 
+                "Authorization": `Bearer ${token}`
             }
         })
             .then(res => res.json())
@@ -87,52 +89,57 @@ function ServicePricing() {
             .catch(err => console.error("Failed to fetch services", err));
     }, []);
 
-   const handleSave = async () => {
+    const handleSave = async () => {
         if (!form.name || !form.price) return showToast("Please fill in all fields.");
+
+        setIsSaving(true);
+
         try {
-            const token = localStorage.getItem("token"); 
+            const token = localStorage.getItem("token");
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
-            
-            if (editingItem) {
-                const res = await fetch(`https://beautydelounge-backend.onrender.com/api/services/${editingItem}`, {
-                    method: "PUT",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` 
-                    },
-                    body: JSON.stringify(finalForm)
-                });
-                const updated = await res.json();
-                setServices(services.map(s => s._id === editingItem ? updated : s));
-            } else {
-                const res = await fetch("https://beautydelounge-backend.onrender.com/api/services", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` 
-                    },
-                    body: JSON.stringify(finalForm)
-                });
-                const created = await res.json();
-                setServices([...services, created]);
+
+            const url = editingItem
+                ? `https://beautydelounge-backend.onrender.com/api/services/${editingItem}`
+                : "https://beautydelounge-backend.onrender.com/api/services";
+
+            const method = editingItem ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(finalForm)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (editingItem) {
+                    setServices(services.map(s => s._id === editingItem ? data : s));
+                } else {
+                    setServices([...services, data]);
+                }
+                setShowForm(false);
+                showToast(editingItem ? "Service updated." : "Service added.", "success");
             }
-            setShowForm(false);
-            showToast(editingItem ? "Service updated." : "Service added.", "success");
         } catch (err) {
-            showToast("Something went wrong. Please try again.");
+            showToast("Something went wrong.");
+        } finally {
+            setIsSaving(false);
         }
     };
     const handleDelete = (id) => {
         setConfirmDelete(id);
     };
 
-   const confirmDeleteAction = async () => {
-        const token = localStorage.getItem("token"); 
-        await fetch(`https://beautydelounge-backend.onrender.com/api/services/${confirmDelete}`, { 
+    const confirmDeleteAction = async () => {
+        const token = localStorage.getItem("token");
+        await fetch(`https://beautydelounge-backend.onrender.com/api/services/${confirmDelete}`, {
             method: "DELETE",
             headers: {
-                "Authorization": `Bearer ${token}` 
+                "Authorization": `Bearer ${token}`
             }
         });
         setServices(services.filter(s => s._id !== confirmDelete));
@@ -148,8 +155,22 @@ function ServicePricing() {
         setShowForm(true);
     };
 
+    const categories = ["All", ...new Set(services.map(s => s.category).filter(Boolean))];
+
+    const filteredServices = services.filter(service => {
+        const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === "All" || service.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
     return (
         <div className="dashboard-container">
+            {isSaving && (
+                <div className="loading-overlay">
+                    <div className="spinner"></div>
+                    <p className="loading-text">SYNCING WITH CLOUD...</p>
+                </div>
+            )}
             <aside className="sidebar">
                 <h2>BEA-UTY DE LOUNGE</h2>
                 <nav>
@@ -166,6 +187,37 @@ function ServicePricing() {
                 <header className="dashboard-header">
                     <h1>Service Pricing</h1>
                     <p>Manage your services and prices</p>
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Search services..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
+                    <div className="filter-controls">
+                        <div className="search-container">
+                            <input
+                                type="text"
+                                placeholder="Search services..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+                        <div className="category-filter">
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="filter-select"
+                            >
+                                {categories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                 </header>
 
                 <button className="add-btn" onClick={openAdd}><FaPlus /> Add Service</button>
@@ -213,27 +265,31 @@ function ServicePricing() {
                 )}
 
                 <div className="stocks-grid">
-                    {services.map(item => (
-                        <div key={item._id} className="stock-card">
-                            <div className="stock-card-image">
-                                {item.imageUrl
-                                    ? <img src={item.imageUrl} alt={item.name} />
-                                    : <div className="stock-no-image">✂️</div>
-                                }
-                            </div>
-                            <div className="stock-card-body">
-                                <h3 className="stock-card-name">{item.name}</h3>
-                                <p className="stock-card-category">{item.category}</p>
-                                <div className="stock-card-footer">
-                                    <span className="stock-card-qty">₱{item.price}</span>
-                                    <div className="stock-card-actions">
-                                        <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
-                                        <button className="icon-btn delete" onClick={() => handleDelete(item._id)}><FaTrash /></button>
+                    {filteredServices.length > 0 ? (
+                        filteredServices.map(item => (
+                            <div key={item._id} className="stock-card">
+                                <div className="stock-card-image">
+                                    {item.imageUrl
+                                        ? <img src={item.imageUrl} alt={item.name} />
+                                        : <div className="stock-no-image">✂️</div>
+                                    }
+                                </div>
+                                <div className="stock-card-body">
+                                    <h3 className="stock-card-name">{item.name}</h3>
+                                    <p className="stock-card-category">{item.category}</p>
+                                    <div className="stock-card-footer">
+                                        <span className="stock-card-qty">₱{item.price}</span>
+                                        <div className="stock-card-actions">
+                                            <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
+                                            <button className="icon-btn delete" onClick={() => handleDelete(item._id)}><FaTrash /></button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="no-results">No services found matching your search.</p>
+                    )}
                 </div>
 
             </main>

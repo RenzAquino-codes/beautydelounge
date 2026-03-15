@@ -9,10 +9,12 @@ function TransactionHistory() {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", status: "Paid" });
     const [transactions, setTransactions] = useState([]);
-    const [services, setServices] = useState([]); 
+    const [services, setServices] = useState([]);
     const [clientError, setClientError] = useState('');
     const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
     const [confirmDelete, setConfirmDelete] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
     const showToast = (message, type = 'error') => {
@@ -22,16 +24,16 @@ function TransactionHistory() {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
         navigate("/");
     };
 
     // Fetch transactions
     // Fetch transactions
     useEffect(() => {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
-            headers: { "Authorization": `Bearer ${token}` } 
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => res.json())
             .then(data => setTransactions(data))
@@ -40,9 +42,9 @@ function TransactionHistory() {
 
     // Fetch services from Service Pricing
     useEffect(() => {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/services", {
-            headers: { "Authorization": `Bearer ${token}` } 
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => res.json())
             .then(data => setServices(data))
@@ -76,14 +78,14 @@ function TransactionHistory() {
             return showToast("Please fill in all fields.");
         if (!isValidName(form.client))
             return showToast("Client name must contain letters only.");
-            
+        setIsSaving(true);
         try {
-            const token = localStorage.getItem("token"); 
+            const token = localStorage.getItem("token");
             const res = await fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(form)
             });
@@ -91,9 +93,11 @@ function TransactionHistory() {
             setTransactions([created, ...transactions]);
             setShowForm(false);
             setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
-            showToast("Transaction saved.", "success"); 
+            showToast("Transaction saved.", "success");
         } catch (err) {
             showToast("Failed to save transaction.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -101,12 +105,12 @@ function TransactionHistory() {
         setConfirmDelete(id);
     };
 
-   const confirmDeleteAction = async () => {
+    const confirmDeleteAction = async () => {
         try {
-            const token = localStorage.getItem("token"); 
-            await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, { 
+            const token = localStorage.getItem("token");
+            await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, {
                 method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` } 
+                headers: { "Authorization": `Bearer ${token}` }
             });
             setTransactions(transactions.filter(t => t._id !== confirmDelete));
             setConfirmDelete(null);
@@ -117,9 +121,19 @@ function TransactionHistory() {
     };
 
     const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    const filteredTransactions = transactions.filter(t =>
+        t.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (Array.isArray(t.service) ? t.service.join(" ") : t.service).toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="dashboard-container">
+            {isSaving && (
+                <div className="loading-overlay">
+                    <div className="spinner"></div>
+                    <p className="loading-text">RECORDING TRANSACTION...</p>
+                </div>
+            )}
             <aside className="sidebar">
                 <h2>BEA-UTY DE LOUNGE</h2>
                 <nav>
@@ -136,9 +150,24 @@ function TransactionHistory() {
                 <header className="dashboard-header">
                     <h1>Transaction History</h1>
                     <p>Total collected: <strong>₱{total.toLocaleString()}</strong></p>
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Search by client or service..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
+
                 </header>
 
-                <button className="add-btn" onClick={() => setShowForm(true)}>
+                <button className="add-btn" onClick={() => {
+                    // Set date to today's date in YYYY-MM-DD format
+                    const today = new Date().toISOString().split('T')[0];
+                    setForm({ ...form, date: today });
+                    setShowForm(true);
+                }}>
                     <FaPlus /> Add Transaction
                 </button>
 
@@ -239,20 +268,33 @@ function TransactionHistory() {
                         </tr>
                     </thead>
                     <tbody>
-                        {transactions.map(t => (
-                            <tr key={t._id}>
-                                <td>{t.client}</td>
-                                <td>{Array.isArray(t.service) ? t.service.join(", ") : t.service}</td>
-                                <td>₱{t.amount}</td>
-                                <td>{t.date}</td>
-                                <td><span className={`status-badge ${t.status.toLowerCase()}`}>{t.status}</span></td>
-                                <td>
-                                    <button className="icon-btn delete" onClick={() => handleDelete(t._id)}>
-                                        <FaTrash />
-                                    </button>
+                        {filteredTransactions.length > 0 ? (
+                            filteredTransactions.map(t => (
+                                <tr key={t._id}>
+                                    <td>{t.client}</td>
+                                    {/* join(",") turns the array of services into a nice readable list */}
+                                    <td>{Array.isArray(t.service) ? t.service.join(", ") : t.service}</td>
+                                    <td>₱{Number(t.amount).toLocaleString()}</td>
+                                    <td>{t.date}</td>
+                                    <td>
+                                        <span className={`status-badge ${t.status.toLowerCase()}`}>
+                                            {t.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button className="icon-btn delete" onClick={() => handleDelete(t._id)}>
+                                            <FaTrash />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="6" className="no-results">
+                                    No transactions found matching your search.
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </main>

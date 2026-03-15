@@ -33,18 +33,18 @@ function Analytics() {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
 
-   const handleLogout = () => {
+    const handleLogout = () => {
         localStorage.removeItem("user");
-        localStorage.removeItem("token"); 
+        localStorage.removeItem("token");
         navigate("/");
     };
 
-  useEffect(() => {
-        const token = localStorage.getItem("token"); 
-        
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
         fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
             headers: {
-                "Authorization": `Bearer ${token}` 
+                "Authorization": `Bearer ${token}`
             }
         })
             .then(res => res.json())
@@ -60,16 +60,23 @@ function Analytics() {
 
     // Most availed services (count per service)
     const serviceCount = transactions.reduce((acc, t) => {
-        acc[t.service] = (acc[t.service] || 0) + 1;
+        const serviceList = Array.isArray(t.service) ? t.service : [t.service];
+        serviceList.forEach(s => {
+            if (s) acc[s] = (acc[s] || 0) + 1;
+        });
         return acc;
     }, {});
     const serviceData = Object.entries(serviceCount).map(([name, value]) => ({ name, value }));
 
     // Earnings per service
     const serviceEarnings = transactions.reduce((acc, t) => {
-        acc[t.service] = (acc[t.service] || 0) + Number(t.amount);
+        const serviceList = Array.isArray(t.service) ? t.service : [t.service];
+        const primaryService = serviceList[0];
+        if (primaryService) {
+            acc[primaryService] = (acc[primaryService] || 0) + Number(t.amount);
+        }
         return acc;
-    }, {});
+    }, {})
     const earningsData = Object.entries(serviceEarnings).map(([name, value]) => ({ name, value }));
 
     // Monthly earnings

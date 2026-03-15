@@ -13,17 +13,16 @@ function Stocks() {
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
-
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // ✅ Only allow images
         if (!file.type.startsWith('image/')) {
             showToast("Please select an image file only.");
             return;
         }
-        // ✅ Max 5MB
         if (file.size > 5 * 1024 * 1024) {
             showToast("Image must be less than 5MB.");
             return;
@@ -36,13 +35,13 @@ function Stocks() {
     const uploadImage = async () => {
         if (!imageFile) return null;
         try {
-            const token = localStorage.getItem("token"); 
+            const token = localStorage.getItem("token");
             const formData = new FormData();
             formData.append('image', imageFile);
             const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
                 method: 'POST',
                 headers: {
-                    "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}`
                 },
                 body: formData
             });
@@ -66,7 +65,7 @@ function Stocks() {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
         navigate("/");
     };
 
@@ -79,10 +78,10 @@ function Stocks() {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
             headers: {
-                "Authorization": `Bearer ${token}` 
+                "Authorization": `Bearer ${token}`
             }
         })
             .then(res => res.json())
@@ -90,19 +89,20 @@ function Stocks() {
             .catch(err => console.error("Failed to fetch stocks", err));
     }, []);
 
-  const handleSave = async () => {
+    const handleSave = async () => {
         if (!form.name || !form.quantity) return showToast("Please fill in all fields.");
+        setIsSaving(true);
         try {
-            const token = localStorage.getItem("token"); 
+            const token = localStorage.getItem("token");
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
-            
+
             if (editingItem) {
                 const res = await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${editingItem}`, {
                     method: "PUT",
-                    headers: { 
+                    headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` 
+                        "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify(finalForm)
                 });
@@ -111,9 +111,9 @@ function Stocks() {
             } else {
                 const res = await fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
                     method: "POST",
-                    headers: { 
+                    headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` 
+                        "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify(finalForm)
                 });
@@ -125,6 +125,8 @@ function Stocks() {
         } catch (err) {
             console.error(err);
             showToast("Something went wrong. Please try again.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -132,12 +134,12 @@ function Stocks() {
         setConfirmDelete(id);
     };
 
-   const confirmDeleteAction = async () => {
-        const token = localStorage.getItem("token"); 
-        await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${confirmDelete}`, { 
+    const confirmDeleteAction = async () => {
+        const token = localStorage.getItem("token");
+        await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${confirmDelete}`, {
             method: "DELETE",
             headers: {
-                "Authorization": `Bearer ${token}` 
+                "Authorization": `Bearer ${token}`
             }
         });
         setStocks(stocks.filter(s => s._id !== confirmDelete));
@@ -148,13 +150,23 @@ function Stocks() {
     const openEdit = (item) => {
         setForm(item);
         setEditingItem(item._id);
-        setImagePreview(item.imageUrl || ''); 
-        setImageFile(null);                  
+        setImagePreview(item.imageUrl || '');
+        setImageFile(null);
         setShowForm(true);
     };
 
+    const filteredStocks = stocks.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
     return (
         <div className="dashboard-container">
+            {isSaving && (
+                <div className="loading-overlay">
+                    <div className="spinner"></div>
+                    <p className="loading-text">SYNCING WITH CLOUD...</p>
+                </div>
+            )}
             <aside className="sidebar">
                 <h2>BEA-UTY DE LOUNGE</h2>
                 <nav>
@@ -171,6 +183,16 @@ function Stocks() {
                 <header className="dashboard-header">
                     <h1>Stocks</h1>
                     <p>Manage your inventory</p>
+
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Search by name or category..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="search-input"
+                        />
+                    </div>
                 </header>
 
                 <button className="add-btn" onClick={openAdd}><FaPlus /> Add Item</button>
@@ -216,29 +238,34 @@ function Stocks() {
                 )}
 
                 <div className="stocks-grid">
-                    {stocks.map(item => (
-                        <div key={item._id} className="stock-card">
-                            <div className="stock-card-image">
-                                {item.imageUrl
-                                    ? <img src={item.imageUrl} alt={item.name} />
-                                    : <div className="stock-no-image">📦</div>
-                                }
-                            </div>
-                            <div className="stock-card-body">
-                                <h3 className="stock-card-name">{item.name}</h3>
-                                <p className="stock-card-category">{item.category}</p>
-                                <div className="stock-card-footer">
-                                    <span className="stock-card-qty">
-                                        {item.quantity} <span className="stock-card-unit">{item.unit}</span>
-                                    </span>
-                                    <div className="stock-card-actions">
-                                        <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
-                                        <button className="icon-btn delete" onClick={() => handleDelete(item._id)}><FaTrash /></button>
+                    {filteredStocks.length > 0 ? (
+                        // Changed stocks.map to filteredStocks.map
+                        filteredStocks.map(item => (
+                            <div key={item._id} className="stock-card">
+                                <div className="stock-card-image">
+                                    {item.imageUrl
+                                        ? <img src={item.imageUrl} alt={item.name} />
+                                        : <div className="stock-no-image">📦</div>
+                                    }
+                                </div>
+                                <div className="stock-card-body">
+                                    <h3 className="stock-card-name">{item.name}</h3>
+                                    <p className="stock-card-category">{item.category}</p>
+                                    <div className="stock-card-footer">
+                                        <span className="stock-card-qty" style={{ color: item.quantity < 5 ? '#e74c3c' : '#c9a84c' }}>
+                                            {item.quantity} <span className="stock-card-unit">{item.unit}</span>
+                                        </span>
+                                        <div className="stock-card-actions">
+                                            <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
+                                            <button className="icon-btn delete" onClick={() => handleDelete(item._id)}><FaTrash /></button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="no-results">No items found matching your search.</p>
+                    )}
                 </div>
             </main>
 

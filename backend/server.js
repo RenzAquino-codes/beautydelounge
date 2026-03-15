@@ -381,6 +381,16 @@ app.delete("/api/transactions/:id", verifyToken, async (req, res) => {
     }
 });
 
+app.get("/api/stocks/low-stock", verifyToken, async (req, res) => {
+    try {
+        // This finds all items where quantity is less than 5
+        const lowStockItems = await Stock.find({ quantity: { $lt: 5 } });
+        res.json(lowStockItems);
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 app.post('/api/upload', verifyToken, upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     res.json({ imageUrl: req.file.path }); 
