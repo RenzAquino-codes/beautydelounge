@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
 const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE;
+const STAFF_SECRET_CODE = process.env.STAFF_SECRET_CODE;
 const crypto = require('crypto');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -174,6 +175,16 @@ app.post("/api/login", async (req, res) => {
 app.post("/api/register", async (req, res) => {
     try {
         const { firstName, middleName, lastName, email, password, adminCode } = req.body;
+        const isAdmin = adminCode === process.env.ADMIN_SECRET_CODE;
+        const isStaff = adminCode === process.env.STAFF_SECRET_CODE;
+
+        if (!isAdmin && !isStaff) {
+            return res.status(401).json({ 
+                error: "Invalid access code. You are not authorized to register." 
+            });
+        }
+        const role = isAdmin ? 'admin' : 'staff';
+
         const nameRegex = /^[a-zA-Z\s]+$/; // Validation sa password
         if (!nameRegex.test(firstName))
             return res.status(400).json({
@@ -194,7 +205,7 @@ app.post("/api/register", async (req, res) => {
             return res.status(400).json({
                 error: "Email already registered"
             });
-        const role = adminCode === ADMIN_SECRET_CODE ? 'admin' : 'staff';
+        
         // Generate a 6-digit code for verification
         const code = crypto.randomInt(100000, 999999).toString();
         // Check if there's already a pending registration and delete it to prevent duplicates

@@ -17,7 +17,7 @@ function Register() {
     const [code, setCode] = useState('');
     const [pendingEmail, setPendingEmail] = useState('');
     const [adminCode, setAdminCode] = useState('');
-    const [showAdminField, setShowAdminField] = useState(false);
+    // const [showAdminField, setShowAdminField] = useState(false);
     const [errors, setErrors] = useState({});
     const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
     const [registerSuccess, setRegisterSuccess] = useState(false);
@@ -50,7 +50,10 @@ function Register() {
 
     const handlesubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm()) return; // stop if errors exist
+        if (!validateForm()) return; 
+        if (!adminCode) {
+        return showToast("Authorization code is required.", "error");
+    }
         setLoading(true);
         try {
             const response = await fetch("https://beautydelounge-backend.onrender.com/api/register", {
@@ -216,7 +219,7 @@ function Register() {
                                         required
                                     />
                                     {/* Hidden admin code toggle */}
-                                    <div style={{ textAlign: 'right', marginBottom: '8px' }}>
+                                    {/* <div style={{ textAlign: 'right', marginBottom: '8px' }}>
                                         <button
                                             type="button"
                                             onClick={() => setShowAdminField(!showAdminField)}
@@ -233,9 +236,10 @@ function Register() {
                                         >
                                             {showAdminField ? 'Hide admin code' : 'Have an admin code?'}
                                         </button>
-                                    </div>
+                                    </div> */}
 
-                                    {showAdminField && (
+
+                                    {/* {showAdminField && (
                                         <div className="form-group">
                                             <label>Admin Code</label>
                                             <input
@@ -245,9 +249,22 @@ function Register() {
                                                 placeholder="Enter admin code"
                                             />
                                         </div>
-                                    )}
-                                     
-                                     {(passwordFocused || password) && (
+                                    )} */}
+                                    <div className="form-group">
+                                        <label>Access Code</label>
+                                        <input
+                                            type="password"
+                                            value={adminCode}
+                                            onChange={(e) => setAdminCode(e.target.value)}
+                                            placeholder="Enter your Staff or Admin code"
+                                            required
+                                            style={{ borderColor: '#c9a84c' }} // Highlight it in gold to show importance
+                                        />
+                                        <p style={{ fontSize: '11px', color: '#8c7a60', marginTop: '4px' }}>
+                                            *A valid authorization code is required to register.
+                                        </p>
+                                    </div>
+                                    {(passwordFocused || password) && (
                                         <ul className="password-rules">
                                             {passwordRules.map((rule, i) => (
                                                 <li key={i} className={rule.test(password) ? 'rule-pass' : 'rule-fail'}>
@@ -259,7 +276,7 @@ function Register() {
                                                 </li>
                                             ))}
                                         </ul>
-                                    )} 
+                                    )}
                                 </div>
 
                                 <button type="submit" disabled={loading}>
