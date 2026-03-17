@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import "./Login.css";
 import { Link, useNavigate } from 'react-router-dom';
-import loungeBg from './lounge.png'
-import logo2 from './Groom1.png';
+import logo from '../assets/images/logo.jpg'
+import loungeBg from '..assets/images/lounge.png';
+import logo2 from '..assets/images/Grom1.png';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 function Login() {
@@ -116,7 +117,7 @@ function Login() {
             <div className="login-success-screen">
                 <div className="success-content">
                     <div className="success-logo">
-                        <img src={logo2} alt="Beauty De Lounge" />
+                        <img src={logo} alt="Beauty De Lounge" />
                     </div>
                     <div className="success-spinner"></div>
                     <h2>Welcome to Bea-uty De Lounge!</h2>
