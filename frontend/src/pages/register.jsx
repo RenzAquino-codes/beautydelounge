@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import logo1 from '../assets/images/logo.jpg'
 import loungeBg from '..assets/images/lounge.png';
-import logo2 from '..assets/images/Grom1.png';
+import logo2 from '..assets/images/Groom1.png';
 
 function Register() {
     const [firstname, setFirstname] = useState('');
