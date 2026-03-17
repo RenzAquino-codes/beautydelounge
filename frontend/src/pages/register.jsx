@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import "./Register.css";
 import { Link, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-import logo from '../assets/images/logo.jpg'
+import logo1 from '../assets/images/logo.jpg'
 import loungeBg from '..assets/images/lounge.png';
 import logo2 from '..assets/images/Grom1.png';
 
@@ -127,7 +127,7 @@ function Register() {
         <div className="register-split-container">
             {/* LEFT SIDE - Branding */}
             <div className="register-left">
-                <img src={logo} alt="Beauty De Lounge" className="hero-logo" />
+                <img src={logo1} alt="Beauty De Lounge" className="hero-logo" />
             </div>
 
             {/* RIGHT SIDE - Form */}
