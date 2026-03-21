@@ -265,7 +265,7 @@ function Register() {
                                             *A valid authorization code is required to register.
                                         </p>
                                     </div>
-                                    {(passwordFocused || password) && (
+                                    {/* {(passwordFocused || password) && (
                                         <ul className="password-rules">
                                             {passwordRules.map((rule, i) => (
                                                 <li key={i} className={rule.test(password) ? 'rule-pass' : 'rule-fail'}>
@@ -277,7 +277,7 @@ function Register() {
                                                 </li>
                                             ))}
                                         </ul>
-                                    )}
+                                    )} */}
                                 </div>
 
                                 <button type="submit" disabled={loading}>
