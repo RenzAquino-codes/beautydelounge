@@ -383,12 +383,16 @@ app.post("/api/transactions", verifyToken, async (req, res) => {
     }
 });
 
-app.delete("/api/transactions/:id", verifyToken, async (req, res) => {
+app.put("/api/transactions/:id", verifyToken, async (req, res) => {
     try {
-        await Transaction.findByIdAndDelete(req.params.id);
-        res.json({ message: "Deleted successfully" });
+        const transaction = await Transaction.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { new: true }
+        );
+        res.json(transaction);
     } catch (err) {
-        res.status(500).json({ error: "Server error" });
+        res.status(400).json({ error: err.message });
     }
 });
 

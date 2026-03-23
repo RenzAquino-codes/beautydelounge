@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
-import { FaArrowLeft, FaPlus, FaTrash, FaCheckSquare, FaSquare, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaTrash, FaEdit, FaCheckSquare, FaSquare, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 function TransactionHistory() {
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", status: "Paid" });
     const [transactions, setTransactions] = useState([]);
+    const [editingItem, setEditingItem] = useState(null);
     const [services, setServices] = useState([]);
     const [clientError, setClientError] = useState('');
     const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
@@ -81,24 +82,52 @@ function TransactionHistory() {
         setIsSaving(true);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(form)
-            });
-            const created = await res.json();
-            setTransactions([created, ...transactions]);
+
+            if (editingItem) {
+                const res = await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${editingItem}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(form)
+                });
+                const updated = await res.json();
+                setTransactions(transactions.map(t => t._id === editingItem ? updated : t));
+                showToast("Transaction updated.", "success");
+            } else {
+                const res = await fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(form)
+                });
+                const created = await res.json();
+                setTransactions([created, ...transactions]);
+                showToast("Transaction saved.", "success");
+            }
+
             setShowForm(false);
             setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
-            showToast("Transaction saved.", "success");
+            setEditingItem(null);
         } catch (err) {
             showToast("Failed to save transaction.");
         } finally {
             setIsSaving(false);
         }
+    };
+    const openEdit = (transaction) => {
+        setForm({
+            client: transaction.client,
+            service: Array.isArray(transaction.service) ? transaction.service : [transaction.service],
+            amount: transaction.amount,
+            date: transaction.date,
+            status: transaction.status
+        });
+        setEditingItem(transaction._id);
+        setShowForm(true);
     };
 
     const handleDelete = (id) => {
@@ -163,9 +192,9 @@ function TransactionHistory() {
                 </header>
 
                 <button className="add-btn" onClick={() => {
-                    // Set date to today's date in YYYY-MM-DD format
                     const today = new Date().toISOString().split('T')[0];
-                    setForm({ ...form, date: today });
+                    setForm({ client: "", service: [], amount: "", date: today, status: "Paid" });
+                    setEditingItem(null);
                     setShowForm(true);
                 }}>
                     <FaPlus /> Add Transaction
@@ -174,7 +203,7 @@ function TransactionHistory() {
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
-                            <h3>Add Transaction</h3>
+                            <h3>{editingItem ? "Edit Transaction" : "Add Transaction"}</h3>
 
                             <input
                                 placeholder="Client Name"
@@ -281,7 +310,11 @@ function TransactionHistory() {
                                             {t.status}
                                         </span>
                                     </td>
+
                                     <td>
+                                        <button className="icon-btn edit" onClick={() => openEdit(t)}>
+                                            <FaEdit />
+                                        </button>
                                         <button className="icon-btn delete" onClick={() => handleDelete(t._id)}>
                                             <FaTrash />
                                         </button>
@@ -311,9 +344,12 @@ function TransactionHistory() {
                             <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>
                                 Yes, Delete
                             </button>
-                            <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>
-                                Cancel
-                            </button>
+                            <button className="cancel-btn" onClick={() => {
+                                setShowForm(false);
+                                setEditingItem(null);
+                                setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+                                setClientError('');
+                            }}>Cancel</button>
                         </div>
                     </div>
                 </div>
