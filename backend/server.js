@@ -74,6 +74,7 @@ const transactionSchema = new mongoose.Schema({
     service: { type: mongoose.Schema.Types.Mixed, required: true },
     amount: { type: Number, required: true },
     date: { type: String },
+    time: { type: String },
     status: { type: String, default: "Paid" }
 });
 

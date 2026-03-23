@@ -7,7 +7,7 @@ import { FaArrowLeft, FaPlus, FaTrash, FaEdit, FaCheckSquare, FaSquare, FaCheckC
 function TransactionHistory() {
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", status: "Paid" });
+    const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", time: "", status: "Paid" });
     const [transactions, setTransactions] = useState([]);
     const [editingItem, setEditingItem] = useState(null);
     const [services, setServices] = useState([]);
@@ -110,7 +110,7 @@ function TransactionHistory() {
             }
 
             setShowForm(false);
-            setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+            setForm({ client: "", service: [], amount: "", date: "", time: "", status: "Paid" });
             setEditingItem(null);
         } catch (err) {
             showToast("Failed to save transaction.");
@@ -124,6 +124,7 @@ function TransactionHistory() {
             service: Array.isArray(transaction.service) ? transaction.service : [transaction.service],
             amount: transaction.amount,
             date: transaction.date,
+            time: transaction.time || '',
             status: transaction.status
         });
         setEditingItem(transaction._id);
@@ -147,6 +148,15 @@ function TransactionHistory() {
         } catch (err) {
             showToast("Failed to delete transaction.");
         }
+    };
+
+    const formatTime = (time) => {
+        if (!time) return '—';
+        const [hours, minutes] = time.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const formattedHour = h % 12 || 12;
+        return `${formattedHour}:${minutes} ${ampm}`;
     };
 
     const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
@@ -192,8 +202,10 @@ function TransactionHistory() {
                 </header>
 
                 <button className="add-btn" onClick={() => {
-                    const today = new Date().toISOString().split('T')[0];
-                    setForm({ client: "", service: [], amount: "", date: today, status: "Paid" });
+                    const now = new Date();
+                    const today = now.toISOString().split('T')[0];
+                    const currentTime = now.toTimeString().slice(0, 5);
+                    setForm({ client: "", service: [], amount: "", date: today, time: currentTime, status: "Paid" });
                     setEditingItem(null);
                     setShowForm(true);
                 }}>
@@ -265,6 +277,13 @@ function TransactionHistory() {
                                 onChange={e => setForm({ ...form, date: e.target.value })}
                             />
 
+                            <input
+                                placeholder="Time"
+                                type="time"
+                                value={form.time}
+                                onChange={e => setForm({ ...form, time: e.target.value })}
+                            />
+
                             <select
                                 value={form.status}
                                 onChange={e => setForm({ ...form, status: e.target.value })}
@@ -277,7 +296,7 @@ function TransactionHistory() {
                                 <button onClick={handleSave}>Save</button>
                                 <button className="cancel-btn" onClick={() => {
                                     setShowForm(false);
-                                    setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
+                                    setForm({ client: "", service: [], amount: "", date: "", time: "", status: "Paid" });
                                     setClientError('');
                                 }}>Cancel</button>
                             </div>
@@ -292,6 +311,7 @@ function TransactionHistory() {
                             <th>Service</th>
                             <th>Amount</th>
                             <th>Date</th>
+                            <th>Time</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -305,6 +325,7 @@ function TransactionHistory() {
                                     <td>{Array.isArray(t.service) ? t.service.join(", ") : t.service}</td>
                                     <td>₱{Number(t.amount).toLocaleString()}</td>
                                     <td>{t.date}</td>
+                                    <td>{formatTime(t.time)}</td>
                                     <td>
                                         <span className={`status-badge ${t.status.toLowerCase()}`}>
                                             {t.status}
