@@ -138,15 +138,22 @@ function TransactionHistory() {
     const confirmDeleteAction = async () => {
         try {
             const token = localStorage.getItem("token");
-            await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, {
+            const res = await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            setTransactions(transactions.filter(t => t._id !== confirmDelete));
-            setConfirmDelete(null);
-            showToast("Transaction deleted.", "success");
+
+            if (res.ok) {
+                // Only remove from UI if the database actually deleted it!
+                setTransactions(transactions.filter(t => t._id !== confirmDelete));
+                showToast("Transaction deleted.", "success");
+            } else {
+                showToast("Failed to delete from server.");
+            }
         } catch (err) {
-            showToast("Failed to delete transaction.");
+            showToast("Network error.");
+        } finally {
+            setConfirmDelete(null);
         }
     };
 
@@ -365,12 +372,9 @@ function TransactionHistory() {
                             <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>
                                 Yes, Delete
                             </button>
-                            <button className="cancel-btn" onClick={() => {
-                                setShowForm(false);
-                                setEditingItem(null);
-                                setForm({ client: "", service: [], amount: "", date: "", status: "Paid" });
-                                setClientError('');
-                            }}>Cancel</button>
+                            <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

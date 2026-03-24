@@ -384,16 +384,29 @@ app.post("/api/transactions", verifyToken, async (req, res) => {
     }
 });
 
+
 app.put("/api/transactions/:id", verifyToken, async (req, res) => {
     try {
         const transaction = await Transaction.findByIdAndUpdate(
             req.params.id, 
             req.body, 
-            { new: true }
+            { new: true } 
         );
+        if (!transaction) return res.status(404).json({ error: "Transaction not found" });
         res.json(transaction);
     } catch (err) {
         res.status(400).json({ error: err.message });
+    }
+});
+
+app.delete("/api/transactions/:id", verifyToken, async (req, res) => {
+    try {
+        const deleted = await Transaction.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: "Transaction not found" });
+        res.json({ message: "Deleted successfully" });
+    } catch (err) {
+        console.error("DELETE ERROR:", err);
+        res.status(500).json({ error: "Server error" });
     }
 });
 
