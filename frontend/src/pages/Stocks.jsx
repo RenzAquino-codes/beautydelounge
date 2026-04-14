@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 function Stocks() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [form, setForm] = useState({ name: "", category: "", quantity: "", unit: "" });
@@ -155,10 +157,20 @@ function Stocks() {
         setShowForm(true);
     };
 
-    const filteredStocks = stocks.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // const filteredStocks = stocks.filter(item =>
+    //     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //     item.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    // );
+
+    const filteredStocks = stocks.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              item.category?.toLowerCase().includes(searchTerm.toLowerCase());
+                              
+        const matchesLowStock = showLowStockOnly ? item.quantity < 5 : true;
+
+        return matchesSearch && matchesLowStock;
+    });
+
     return (
         <div className="dashboard-container">
             {isSaving && (
@@ -192,6 +204,17 @@ function Stocks() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="search-input"
                         />
+
+                        {showLowStockOnly && (
+                        <button 
+                            className="cancel-btn" 
+                            onClick={() => setShowLowStockOnly(false)}
+                            style={{ padding: '0 15px', whiteSpace: 'nowrap' }}
+                        >
+                            Show All Items
+                        </button>
+                    )}
+
                     </div>
                 </header>
 
