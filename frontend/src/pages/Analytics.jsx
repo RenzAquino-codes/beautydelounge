@@ -4,12 +4,37 @@ import { FaArrowLeft } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import {
     PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+    LineChart, Line, XAxis, YAxis, CartesianGrid
 } from "recharts";
 
 
 const COLORS = ['#c9a84c', '#e8d5a3', '#a07830', '#f0e0b0', '#7a5c28', '#d4b870', '#8c6820'];
-const CustomTooltip = ({ active, payload }) => {
+// const CustomTooltip = ({ active, payload }) => {
+//     if (active && payload && payload.length) {
+//         return (
+//             <div style={{
+//                 background: 'rgba(255,255,255,0.95)',
+//                 border: '1px solid rgba(201,168,76,0.3)',
+//                 borderRadius: '10px',
+//                 padding: '12px 16px',
+//                 fontSize: '13px',
+//                 color: '#3a3020',
+//                 boxShadow: '0 4px 12px rgba(74,63,47,0.1)'
+//             }}>
+//                 <p style={{ margin: 0, fontWeight: 600 }}>{payload[0].name}</p>
+//                 <p style={{ margin: '4px 0 0', color: '#c9a84c' }}>{payload[0].value}</p>
+//             </div>
+//         );
+//     }
+//     return null;
+// };
+
+
+const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+        // Line charts pass the x-axis name as 'label', Pie charts pass it inside 'payload[0].name'
+        const title = label || payload[0].name;
+
         return (
             <div style={{
                 background: 'rgba(255,255,255,0.95)',
@@ -20,13 +45,16 @@ const CustomTooltip = ({ active, payload }) => {
                 color: '#3a3020',
                 boxShadow: '0 4px 12px rgba(74,63,47,0.1)'
             }}>
-                <p style={{ margin: 0, fontWeight: 600 }}>{payload[0].name}</p>
-                <p style={{ margin: '4px 0 0', color: '#c9a84c' }}>{payload[0].value}</p>
+                <p style={{ margin: 0, fontWeight: 600 }}>{title}</p>
+                <p style={{ margin: '4px 0 0', color: '#c9a84c' }}>
+                    ₱{payload[0].value.toLocaleString()}
+                </p>
             </div>
         );
     }
     return null;
 };
+
 
 function Analytics() {
     const navigate = useNavigate();
@@ -241,33 +269,38 @@ function Analytics() {
                                     <p className="no-data">No data available</p>
                                 ) : (
                                     <ResponsiveContainer width="100%" height={280}>
-                                        <PieChart>
-                                            <Pie
-                                                data={monthlyData}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={100}
-                                                paddingAngle={4}
-                                                dataKey="value"
-                                                labelLine={false}
-                                                label={renderCustomLabel}
-                                            >
-                                                {monthlyData.map((_, index) => (
-                                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Legend
-                                                iconType="circle"
-                                                iconSize={10}
-                                                formatter={(value) => (
-                                                    <span style={{ color: '#3a3020', fontSize: '12px' }}>
-                                                        {value} — ₱{monthlyData.find(d => d.name === value)?.value?.toLocaleString()}
-                                                    </span>
-                                                )}
+                                        <LineChart data={monthlyData} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                                            {/* Adds horizontal grid lines for readability */}
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" vertical={false} />
+
+                                            {/* X-Axis shows the month names */}
+                                            <XAxis
+                                                dataKey="name"
+                                                tick={{ fill: '#8c7a60', fontSize: 12 }}
+                                                axisLine={false}
+                                                tickLine={false}
                                             />
-                                        </PieChart>
+
+                                            {/* Y-Axis shows the earnings amounts */}
+                                            <YAxis
+                                                tick={{ fill: '#8c7a60', fontSize: 12 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tickFormatter={(value) => `₱${value.toLocaleString()}`}
+                                            />
+
+                                            <Tooltip content={<CustomTooltip />} />
+
+                                            {/* The actual line graph */}
+                                            <Line
+                                                type="monotone"
+                                                dataKey="value"
+                                                stroke="#c9a84c"
+                                                strokeWidth={3}
+                                                dot={{ r: 4, fill: '#ffffff', stroke: '#c9a84c', strokeWidth: 2 }}
+                                                activeDot={{ r: 6, fill: '#c9a84c', stroke: '#ffffff' }}
+                                            />
+                                        </LineChart>
                                     </ResponsiveContainer>
                                 )}
                             </div>
