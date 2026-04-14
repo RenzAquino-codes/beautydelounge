@@ -440,6 +440,109 @@ app.put("/api/users/:id", verifyToken, async (req, res) => {
     }
 });
 
+
+// GET all users (admin only)
+app.get("/api/users", verifyToken, async (req, res) => {
+    try {
+        const users = await User.find({}, { password: 0 });
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// DELETE user (admin only)
+app.delete("/api/users/:id", verifyToken, async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ message: "User deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// POST create user by admin (skips access code, uses role directly)
+app.post("/api/admin/create-user", verifyToken, async (req, res) => {
+    try {
+        const { firstName, middleName, lastName, email, password, role } = req.body;
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser)
+            return res.status(400).json({ error: "Email already registered" });
+
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        if (!nameRegex.test(firstName))
+            return res.status(400).json({ error: "First name must contain letters only." });
+        if (!nameRegex.test(lastName))
+            return res.status(400).json({ error: "Last name must contain letters only." });
+
+        const code = crypto.randomInt(100000, 999999).toString();
+        await PendingUser.deleteOne({ email });
+
+        const pendingUser = new PendingUser({
+            firstName, middleName, lastName, email, password, role, code
+        });
+        await pendingUser.save();
+
+        await sgMail.send({
+            from: 'renzfrancisaquino@gmail.com',
+            to: email,
+            subject: 'Your Beauty De Lounge Account Verification',
+            html: `
+            <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
+                <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
+                <p style="color: #6b5c45;">An admin has created an account for you. Use the code below to verify your email:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
+                </div>
+                <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes.</p>
+            </div>
+            `
+        });
+
+        res.json({ message: "Verification code sent to the user's email." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // STEP 1 — Request reset code
 app.post("/api/forgot-password", async (req, res) => {
     try {

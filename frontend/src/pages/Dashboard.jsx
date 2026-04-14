@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBoxes, FaTags, FaHistory, FaChartPie, FaUser, FaExclamationTriangle } from "react-icons/fa";
+import { FaBoxes, FaTags, FaHistory, FaChartPie, FaUser, FaExclamationTriangle, FaUsers } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import "./Dashboard.css";
 
@@ -45,6 +45,7 @@ function Dashboard() {
         { title: "Service Pricing", path: "/dashboard/service-pricing", icon: <FaTags /> },
         { title: "Transaction History", path: "/dashboard/transactions", icon: <FaHistory /> },
         { title: "Analytics", path: "/dashboard/analytics", icon: <FaChartPie />, adminOnly: true },
+        { title: "Manage Users", path: "/dashboard/manage-users", icon: <FaUsers />, adminOnly: true },
     ];
 
 

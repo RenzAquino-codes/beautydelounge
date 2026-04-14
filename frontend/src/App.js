@@ -6,14 +6,17 @@ import ServicePricing from './pages/ServicePricing.jsx';
 import TransactionHistory from './pages/TransactionHistory.jsx';
 import Analytics from './pages/Analytics.jsx';
 import Profile from './pages/Profile.jsx';
+import ManageUsers from './pages/ManageUsers';
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
+
+
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 function AdminRoute({ children }) {
     const user = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token"); 
-    if (!token) return <Navigate to="/" />; 
-    if (user?.role !== 'admin' && user?.role !== 'static-admin') return <Navigate to="/dashboard" />; 
+    const token = localStorage.getItem("token");
+    if (!token) return <Navigate to="/" />;
+    if (user?.role !== 'admin' && user?.role !== 'static-admin') return <Navigate to="/dashboard" />;
     return children;
 }
 
@@ -25,7 +28,7 @@ function App() {
                 <Route path="/" element={<Login />} />
 
                 {/*Register Page*/}
-                <Route path="/register" element={<Register />} />
+                {/* <Route path="/register" element={<Register />} /> */}
 
                 {/*Dashboard page*/}
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -40,6 +43,17 @@ function App() {
                         <Analytics />
                     </AdminRoute>
                 } />
+
+
+                <Route path="/dashboard/manage-users" element={
+                    <AdminRoute>
+                        <ManageUsers />
+                    </AdminRoute>
+                } />
+
+
+
+
 
             </Routes>
         </Router>

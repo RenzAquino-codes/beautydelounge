@@ -154,9 +154,10 @@ function Login() {
                                     {loading ? "Signing in..." : "Sign In →"}
                                 </button>
                             </form>
-                            <p className="register-link">
+                            {/* <p className="register-link">
                                 New here? <Link to="/register">Create an account</Link>
-                            </p>
+                            </p> */}
+                            
                             {/* Forgot password link */}
                             <p className="register-link" style={{ marginTop: '8px' }}>
                                 <button
