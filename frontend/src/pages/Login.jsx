@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import "./Login.css";
-import { Link, useNavigate } from 'react-router-dom';
+// import { Link, useNavigate } from 'react-router-dom';
 import logo1 from '../assets/images/logo.jpg'
 import loungeBg from '../assets/images/lounge.png';
 import logo2 from '../assets/images/Groom1.png';
@@ -157,7 +157,7 @@ function Login() {
                             {/* <p className="register-link">
                                 New here? <Link to="/register">Create an account</Link>
                             </p> */}
-                            
+
                             {/* Forgot password link */}
                             <p className="register-link" style={{ marginTop: '8px' }}>
                                 <button

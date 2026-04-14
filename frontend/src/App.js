@@ -1,5 +1,5 @@
 import Login from "./pages/Login.jsx";
-import Register from "./pages/register.jsx";
+// import Register from "./pages/register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Stocks from './pages/Stocks.jsx';
 import ServicePricing from './pages/ServicePricing.jsx';
