@@ -8,7 +8,6 @@ function Dashboard() {
     const navigate = useNavigate();
 
     // We only need the user object for displaying their name/role
-    const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const user = JSON.parse(localStorage.getItem("user"));
     const [dateTime, setDateTime] = useState(new Date());
     const [lowStockCount, setLowStockCount] = useState(0);
