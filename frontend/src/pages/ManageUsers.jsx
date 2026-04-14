@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlus, FaTrash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
-import { FaCheckCircle as FaCheck, FaTimesCircle as FaTimes } from "react-icons/fa";
+
 
 function ManageUsers() {
     const navigate = useNavigate();
