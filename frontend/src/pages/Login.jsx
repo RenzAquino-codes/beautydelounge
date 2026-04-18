@@ -139,7 +139,7 @@ function Login() {
                     {/* Normal Login */}
                     {forgotStep === 0 && (
                         <>
-                            <h2>Sign in po</h2>
+                            <h2>Sign In Po</h2>
                             
                             <form onSubmit={handleSubmit}>
                                 <div className="form-group">
