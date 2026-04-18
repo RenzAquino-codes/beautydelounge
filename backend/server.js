@@ -137,7 +137,7 @@ const verifyToken = (req, res, next) => {
 //Default admin creation on server start
 async function createDefaultAdmin() {
     try {
-        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com';
+        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'Padmin@example.com';
         const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'adminpassword';
 
         const existingAdmin = await User.findOne({ email: adminEmail, role: 'admin' });
