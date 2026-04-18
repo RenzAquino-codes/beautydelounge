@@ -130,6 +130,38 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+
+
+
+
+//Default admin creation on server start
+async function createDefaultAdmin() {
+    try {
+        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com';
+        const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'adminpassword';
+
+        const existingAdmin = await User.findOne({ email: adminEmail, role: 'admin' });
+
+        if (!existingAdmin) {
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            const defaultAdmin = new User({
+                firstName: 'Default',
+                middleName: '', // Optional
+                lastName: 'Admin',
+                email: adminEmail,
+                password: hashedPassword,
+                role: 'admin'
+            });
+            await defaultAdmin.save();
+            console.log(`Default admin account created: ${adminEmail}`);
+        } else {
+            console.log('Default admin account already exists.');
+        }
+    } catch (error) {
+        console.error('Error creating default admin account:', error);
+    }
+}
+
 // =====================
 // AUTH ROUTES
 // =====================
