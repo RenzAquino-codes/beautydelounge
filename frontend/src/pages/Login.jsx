@@ -182,7 +182,7 @@ function Login() {
                     {/* STEP 1 — Enter Email */}
                     {forgotStep === 1 && (
                         <>
-                            <h2>Reset Password</h2>
+                            <h2>Reset Your Password</h2>
                             <p className="subtitle">Enter your email and we'll send you a reset code.</p>
                             <form onSubmit={handleForgotPassword}>
                                 <div className="form-group">
