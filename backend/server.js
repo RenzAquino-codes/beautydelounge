@@ -130,15 +130,16 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-
-
-
-
-//Default admin creation on server start
+// =====================
+// Default Admin Account Creation
+// This function needs to be defined BEFORE app.listen
+// =====================
 async function createDefaultAdmin() {
     try {
         const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'Padmin@example.com';
-        const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'adminpassword';
+        // IMPORTANT: Use Padmin123 if that's what you're testing with,
+        // or ensure your .env DEFAULT_ADMIN_PASSWORD matches.
+        const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'Padmin123'; 
 
         const existingAdmin = await User.findOne({ email: adminEmail, role: 'admin' });
 
@@ -146,7 +147,7 @@ async function createDefaultAdmin() {
             const hashedPassword = await bcrypt.hash(adminPassword, 10);
             const defaultAdmin = new User({
                 firstName: 'Default',
-                middleName: '', // Optional
+                middleName: '', 
                 lastName: 'Admin',
                 email: adminEmail,
                 password: hashedPassword,
@@ -218,7 +219,7 @@ app.post("/api/register", async (req, res) => {
         }
         const role = isAdmin ? 'admin' : 'staff';
 
-        const nameRegex = /^[a-zA-Z\s]+$/; // Validation sa password
+        const nameRegex = /^[a-zA-Z\s]+$/; 
         if (!nameRegex.test(firstName))
             return res.status(400).json({
                 error: "First name must contain letters only."
@@ -539,42 +540,6 @@ app.post("/api/admin/create-user", verifyToken, async (req, res) => {
     }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // STEP 1 — Request reset code
 app.post("/api/forgot-password", async (req, res) => {
     try {
@@ -643,6 +608,8 @@ app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
 });
 
-app.listen(process.env.PORT || 5000, () =>
-    console.log(`Server running on port ${process.env.PORT || 5000}`)
-);
+// The app.listen call MUST await createDefaultAdmin()
+app.listen(process.env.PORT || 5000, async () => { // Changed to async here
+    console.log(`Server running on port ${process.env.PORT || 5000}`);
+    await createDefaultAdmin(); // Call the async function here
+});
