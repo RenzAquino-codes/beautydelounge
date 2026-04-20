@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
 
 const API = "https://beautydelounge-backend.onrender.com";
 
-function Stocks() {
+function ServicePricing() {
     const navigate = useNavigate();
-    const location = useLocation();
     const user = JSON.parse(localStorage.getItem("user"));
     const isAdmin = user?.role === 'admin' || user?.role === 'static-admin';
 
-    const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
-    const [form, setForm] = useState({ name: "", category: "", quantity: "", unit: "" });
-    const [stocks, setStocks] = useState([]);
+    const [form, setForm] = useState({ name: "", category: "", price: "" });
+    const [services, setServices] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
-    const [searchTerm, setSearchTerm] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("All");
 
     // Category management
     const [categories, setCategories] = useState([]);
@@ -37,9 +36,9 @@ function Stocks() {
         setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
     };
 
-    // Fetch categories for stocks
+    // Fetch service categories
     const fetchCategories = () => {
-        fetch(`${API}/api/categories?type=stock`, {
+        fetch(`${API}/api/categories?type=service`, {
             headers: { "Authorization": `Bearer ${token()}` }
         })
             .then(res => res.json())
@@ -48,22 +47,22 @@ function Stocks() {
     };
 
     useEffect(() => {
-           fetch(`${API}/api/services`, {
-               headers: { "Authorization": `Bearer ${token()}` }
-           })
-               .then(res => res.json())
-               .then(data => setStocks(data))
-               .catch(err => console.error("Failed to fetch stocks", err));
-   
-           fetchCategories();
-           // eslint-disable-next-line react-hooks/exhaustive-deps
-       }, []);
+        fetch(`${API}/api/services`, {
+            headers: { "Authorization": `Bearer ${token()}` }
+        })
+            .then(res => res.json())
+            .then(data => setServices(data))
+            .catch(err => console.error("Failed to fetch services", err));
+
+        fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (!file.type.startsWith('image/')) { showToast("Please select an image file only."); return; }
-        if (file.size > 5 * 1024 * 1024) { showToast("Image must be less than 5MB."); return; }
+        if (!file.type.startsWith('image/')) return showToast("Please select an image file only.");
+        if (file.size > 5 * 1024 * 1024) return showToast("Image must be less than 5MB.");
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -78,23 +77,21 @@ function Stocks() {
                 headers: { "Authorization": `Bearer ${token()}` },
                 body: formData
             });
-            if (!res.ok) { showToast("Image upload failed. Saving without image."); return null; }
             const data = await res.json();
             return data.imageUrl;
         } catch (err) {
-            showToast("Image upload failed. Saving without image.");
+            showToast("Image upload failed.");
             return null;
         }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        localStorage.clear();
         navigate("/");
     };
 
     const openAdd = () => {
-        setForm({ name: "", category: "", quantity: "", unit: "" });
+        setForm({ name: "", category: "", price: "" });
         setEditingItem(null);
         setImageFile(null);
         setImagePreview('');
@@ -102,47 +99,43 @@ function Stocks() {
     };
 
     const handleSave = async () => {
-        if (!form.name || !form.quantity) return showToast("Please fill in all fields.");
+        if (!form.name || !form.price) return showToast("Please fill in all fields.");
         setIsSaving(true);
         try {
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
+            const url = editingItem
+                ? `${API}/api/services/${editingItem}`
+                : `${API}/api/services`;
 
-            if (editingItem) {
-                const res = await fetch(`${API}/api/stocks/${editingItem}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
-                    body: JSON.stringify(finalForm)
-                });
-                const updated = await res.json();
-                setStocks(stocks.map(s => s._id === editingItem ? updated : s));
-            } else {
-                const res = await fetch(`${API}/api/stocks`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
-                    body: JSON.stringify(finalForm)
-                });
-                const created = await res.json();
-                setStocks([...stocks, created]);
+            const res = await fetch(url, {
+                method: editingItem ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                body: JSON.stringify(finalForm)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setServices(editingItem
+                    ? services.map(s => s._id === editingItem ? data : s)
+                    : [...services, data]
+                );
+                setShowForm(false);
+                showToast(editingItem ? "Updated!" : "Added!", "success");
             }
-            setShowForm(false);
-            showToast(editingItem ? "Item updated." : "Item added.", "success");
-        } catch (err) {
-            console.error(err);
-            showToast("Something went wrong. Please try again.");
         } finally {
             setIsSaving(false);
         }
     };
 
     const confirmDeleteAction = async () => {
-        await fetch(`${API}/api/stocks/${confirmDelete}`, {
+        await fetch(`${API}/api/services/${confirmDelete}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token()}` }
         });
-        setStocks(stocks.filter(s => s._id !== confirmDelete));
+        setServices(services.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
-        showToast("Item deleted.", "success");
+        showToast("Service deleted.", "success");
     };
 
     const openEdit = (item) => {
@@ -162,7 +155,7 @@ function Stocks() {
             const res = await fetch(`${API}/api/categories`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
-                body: JSON.stringify({ name, type: "stock" })
+                body: JSON.stringify({ name, type: "service" })
             });
             const data = await res.json();
             if (!res.ok) return showToast(data.error || "Failed to add category.");
@@ -191,12 +184,12 @@ function Stocks() {
         }
     };
 
-    const filteredStocks = stocks.filter(item => {
-        const matchesSearch =
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.category?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesLowStock = showLowStockOnly ? item.quantity < 5 : true;
-        return matchesSearch && matchesLowStock;
+    // Filter Logic
+    const filterOptions = ["All", ...categories.map(c => c.name)];
+    const filteredServices = services.filter(service => {
+        const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === "All" || service.category === selectedCategory;
+        return matchesSearch && matchesCategory;
     });
 
     return (
@@ -210,41 +203,41 @@ function Stocks() {
             <aside className="sidebar">
                 <h2>BEA-UTY DE LOUNGE</h2>
                 <nav>
-                    <div className="nav-item" onClick={() => navigate("/dashboard")}>
-                        <FaArrowLeft /> <span>Back</span>
-                    </div>
-                    <div className="nav-item logout" onClick={handleLogout}>
-                        <HiArrowLeftEndOnRectangle /> <span>Logout</span>
-                    </div>
+                    <div className="nav-item" onClick={() => navigate("/dashboard")}><FaArrowLeft /> <span>Back</span></div>
+                    <div className="nav-item logout" onClick={handleLogout}><HiArrowLeftEndOnRectangle /> <span>Logout</span></div>
                 </nav>
             </aside>
 
             <main className="main-content">
                 <header className="dashboard-header">
-                    <h1>Stocks</h1>
-                    <p>Manage your inventory</p>
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            placeholder="Search by name or category..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
-                        {showLowStockOnly && (
-                            <button
-                                className="cancel-btn"
-                                onClick={() => setShowLowStockOnly(false)}
-                                style={{ padding: '0 15px', whiteSpace: 'nowrap' }}
+                    <h1>Service Pricing</h1>
+                    <p>Manage your services and prices</p>
+                    <div className="filter-controls">
+                        <div className="search-container">
+                            <input
+                                type="text"
+                                placeholder="Search services..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+                        <div className="category-filter">
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="filter-select"
                             >
-                                Show All Items
-                            </button>
-                        )}
+                                {filterOptions.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </header>
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button className="add-btn" onClick={openAdd}><FaPlus /> Add Item</button>
+                    <button className="add-btn" onClick={openAdd}><FaPlus /> Add Service</button>
                     {isAdmin && (
                         <button
                             className="add-btn"
@@ -256,13 +249,13 @@ function Stocks() {
                     )}
                 </div>
 
-                {/* Add / Edit Item Modal */}
+                {/* Add / Edit Service Modal */}
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
-                            <h3>{editingItem ? "Edit Item" : "Add Item"}</h3>
+                            <h3>{editingItem ? "Edit Service" : "Add Service"}</h3>
                             <input
-                                placeholder="Name"
+                                placeholder="Service Name"
                                 value={form.name}
                                 onChange={e => setForm({ ...form, name: e.target.value })}
                             />
@@ -288,62 +281,47 @@ function Stocks() {
                             </select>
 
                             <input
-                                placeholder="Quantity"
+                                placeholder="Price (₱)"
                                 type="number"
-                                value={form.quantity}
-                                onChange={e => setForm({ ...form, quantity: e.target.value })}
+                                value={form.price}
+                                onChange={e => setForm({ ...form, price: e.target.value })}
                             />
-                            <input
-                                placeholder="Unit (e.g. bottles)"
-                                value={form.unit}
-                                onChange={e => setForm({ ...form, unit: e.target.value })}
-                            />
-                            <div className="image-upload-box" onClick={(e) => {
-                                e.stopPropagation();
-                                document.getElementById('stockImageInput').click();
-                            }}>
+                            <div className="image-upload-box" onClick={() => document.getElementById('serviceImageInput').click()}>
                                 {imagePreview
                                     ? <img src={imagePreview} alt="preview" className="image-preview" />
                                     : <div className="image-upload-placeholder"><span>Click to add image</span></div>
                                 }
                             </div>
                             <input
-                                key={editingItem || 'new'}
-                                id="stockImageInput"
+                                id="serviceImageInput"
                                 type="file"
-                                accept="image/png, image/jpeg, image/jpg, image/webp"
+                                accept="image/*"
                                 style={{ display: 'none' }}
                                 onChange={handleImageChange}
                             />
                             <div className="modal-actions">
                                 <button onClick={handleSave}>Save</button>
-                                <button className="cancel-btn" onClick={() => {
-                                    setShowForm(false);
-                                    setImageFile(null);
-                                    setImagePreview('');
-                                }}>Cancel</button>
+                                <button className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
                             </div>
                         </div>
                     </div>
                 )}
 
                 <div className="stocks-grid">
-                    {filteredStocks.length > 0 ? (
-                        filteredStocks.map(item => (
+                    {filteredServices.length > 0 ? (
+                        filteredServices.map(item => (
                             <div key={item._id} className="stock-card">
                                 <div className="stock-card-image">
                                     {item.imageUrl
                                         ? <img src={item.imageUrl} alt={item.name} />
-                                        : <div className="stock-no-image">📦</div>
+                                        : <div className="stock-no-image">✂️</div>
                                     }
                                 </div>
                                 <div className="stock-card-body">
                                     <h3 className="stock-card-name">{item.name}</h3>
                                     <p className="stock-card-category">{item.category}</p>
                                     <div className="stock-card-footer">
-                                        <span className="stock-card-qty" style={{ color: item.quantity < 5 ? '#e74c3c' : '#c9a84c' }}>
-                                            {item.quantity} <span className="stock-card-unit">{item.unit}</span>
-                                        </span>
+                                        <span className="stock-card-qty">₱{item.price}</span>
                                         <div className="stock-card-actions">
                                             <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
                                             <button className="icon-btn delete" onClick={() => setConfirmDelete(item._id)}><FaTrash /></button>
@@ -353,7 +331,7 @@ function Stocks() {
                             </div>
                         ))
                     ) : (
-                        <p className="no-results">No items found matching your search.</p>
+                        <p className="no-results">No services found.</p>
                     )}
                 </div>
             </main>
@@ -362,7 +340,7 @@ function Stocks() {
             {showCategoryModal && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '420px' }}>
-                        <h3 style={{ marginBottom: '16px' }}>Manage Stock Categories</h3>
+                        <h3 style={{ marginBottom: '16px' }}>Manage Service Categories</h3>
 
                         {/* Add new category */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -443,7 +421,7 @@ function Stocks() {
                         <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
                         <h3 style={{ marginBottom: '8px' }}>Delete Category?</h3>
                         <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>
-                            Existing stock items with this category will not be affected.
+                            Existing services with this category will not be affected.
                         </p>
                         <div className="modal-actions">
                             <button onClick={() => handleDeleteCategory(confirmDeleteCategory)} style={{ background: '#e74c3c' }}>
@@ -455,15 +433,13 @@ function Stocks() {
                 </div>
             )}
 
-            {/* Confirm Delete Item */}
+            {/* Confirm Delete Service */}
             {confirmDelete && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
                         <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
-                        <h3 style={{ marginBottom: '8px' }}>Delete Item?</h3>
-                        <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>
-                            This action cannot be undone.
-                        </p>
+                        <h3>Delete Service?</h3>
+                        <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>This action cannot be undone.</p>
                         <div className="modal-actions">
                             <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>Yes, Delete</button>
                             <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>Cancel</button>
@@ -472,12 +448,9 @@ function Stocks() {
                 </div>
             )}
 
-            {/* Toast */}
             {toast.show && (
                 <div className={`toast toast-${toast.type}`}>
-                    <span className="toast-icon">
-                        {toast.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
-                    </span>
+                    <span className="toast-icon">{toast.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}</span>
                     <span className="toast-message">{toast.message}</span>
                 </div>
             )}
@@ -485,4 +458,4 @@ function Stocks() {
     );
 }
 
-export default Stocks;
+export default ServicePricing;
