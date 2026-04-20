@@ -6,11 +6,10 @@ import "./Dashboard.css";
 
 function Dashboard() {
     const navigate = useNavigate();
-
-    // We only need the user object for displaying their name/role
     const user = JSON.parse(localStorage.getItem("user"));
     const [dateTime, setDateTime] = useState(new Date());
     const [lowStockCount, setLowStockCount] = useState(0);
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/stocks/low-stock", {
@@ -35,8 +34,7 @@ function Dashboard() {
     });
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.clear();
         navigate("/");
     };
 
@@ -48,17 +46,10 @@ function Dashboard() {
         { title: "Manage Users", path: "/dashboard/manage-users", icon: <FaUsers />, adminOnly: true },
     ];
 
-
     const modules = allModules.filter(module => {
-        if (module.adminOnly) {
-            return user?.role === 'admin' || user?.role === 'static-admin';
-        }
+        if (module.adminOnly) return user?.role === 'admin' || user?.role === 'static-admin';
         return true;
     });
-
-    const handleModuleClick = (path) => {
-        navigate(path);
-    };
 
     if (!user) return null;
 
