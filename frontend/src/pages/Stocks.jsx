@@ -219,36 +219,54 @@ function Stocks() {
                 </nav>
             </aside>
 
-            <main className="main-content">
+   <main className="main-content">
                 <header className="dashboard-header">
                     <h1>Stocks</h1>
                     <p>Manage your inventory</p>
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            placeholder="Search by name or category..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
-                        {showLowStockOnly && (
-                            <button
-                                className="cancel-btn"
-                                onClick={() => setShowLowStockOnly(false)}
-                                style={{ padding: '0 15px', whiteSpace: 'nowrap' }}
-                            >
-                                Show All Items
-                            </button>
-                        )}
-                    </div>
                 </header>
 
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button className="add-btn" onClick={openAdd}><FaPlus /> Add Item</button>
+                {/* 1. VIEWING/FILTER SECTION (Now at the top) */}
+                <div className="filter-controls" style={{ 
+                    background: '#fff', 
+                    padding: '20px', 
+                    borderRadius: '12px', 
+                    marginBottom: '20px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-end',
+                    flexWrap: 'wrap',
+                    gap: '15px'
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '1', minWidth: '250px' }}>
+                        <label style={{ fontWeight: '600', fontSize: '14px', color: '#4a3f2f', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            View by Category / Type:
+                        </label>
+                        <select
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: '2px solid #e8e0d4',
+                                background: '#faf8f5',
+                                fontSize: '15px',
+                                color: '#3a3020',
+                                outline: 'none'
+                            }}
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map(cat => (
+                                <option key={cat._id} value={cat.name}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     {isAdmin && (
                         <button
                             className="add-btn"
-                            style={{ background: '#8c7a60' }}
+                            style={{ background: '#8c7a60', margin: 0, height: '45px' }}
                             onClick={() => setShowCategoryModal(true)}
                         >
                             <FaTags /> Manage Categories
@@ -256,77 +274,45 @@ function Stocks() {
                     )}
                 </div>
 
-                {/* Add / Edit Item Modal */}
-                {showForm && (
-                    <div className="modal-overlay">
-                        <div className="modal">
-                            <h3>{editingItem ? "Edit Item" : "Add Item"}</h3>
-                            <input
-                                placeholder="Name"
-                                value={form.name}
-                                onChange={e => setForm({ ...form, name: e.target.value })}
-                            />
-
-                            {/* Category dropdown */}
-                            <select
-                                value={form.category}
-                                onChange={e => setForm({ ...form, category: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '10px 12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #dcd5c9',
-                                    background: '#faf8f5',
-                                    color: form.category ? '#3a3020' : '#8c7a60',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                <option value="">— Select Category —</option>
-                                {categories.map(cat => (
-                                    <option key={cat._id} value={cat.name}>{cat.name}</option>
-                                ))}
-                            </select>
-
-                            <input
-                                placeholder="Quantity"
-                                type="number"
-                                value={form.quantity}
-                                onChange={e => setForm({ ...form, quantity: e.target.value })}
-                            />
-                            <input
-                                placeholder="Unit (e.g. bottles)"
-                                value={form.unit}
-                                onChange={e => setForm({ ...form, unit: e.target.value })}
-                            />
-                            <div className="image-upload-box" onClick={(e) => {
-                                e.stopPropagation();
-                                document.getElementById('stockImageInput').click();
-                            }}>
-                                {imagePreview
-                                    ? <img src={imagePreview} alt="preview" className="image-preview" />
-                                    : <div className="image-upload-placeholder"><span>Click to add image</span></div>
-                                }
-                            </div>
-                            <input
-                                key={editingItem || 'new'}
-                                id="stockImageInput"
-                                type="file"
-                                accept="image/png, image/jpeg, image/jpg, image/webp"
-                                style={{ display: 'none' }}
-                                onChange={handleImageChange}
-                            />
-                            <div className="modal-actions">
-                                <button onClick={handleSave}>Save</button>
-                                <button className="cancel-btn" onClick={() => {
-                                    setShowForm(false);
-                                    setImageFile(null);
-                                    setImagePreview('');
-                                }}>Cancel</button>
-                            </div>
-                        </div>
+                {/* 2. ACTIONS SECTION (Search and Add Item) */}
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '15px', 
+                    marginBottom: '25px', 
+                    alignItems: 'center', 
+                    flexWrap: 'wrap' 
+                }}>
+                    <div className="search-container" style={{ flex: '1', margin: 0 }}>
+                        <input
+                            type="text"
+                            placeholder="Search item name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="search-input"
+                            style={{ width: '100%' }}
+                        />
                     </div>
-                )}
 
+                    <button 
+                        className="add-btn" 
+                        onClick={openAdd} 
+                        style={{ margin: 0, whiteSpace: 'nowrap', height: '45px' }}
+                    >
+                        <FaPlus /> Add Item
+                    </button>
+
+                    {showLowStockOnly && (
+                        <button
+                            className="cancel-btn"
+                            onClick={() => setShowLowStockOnly(false)}
+                            style={{ padding: '0 20px', height: '45px', whiteSpace: 'nowrap' }}
+                        >
+                            Show All Items
+                        </button>
+                    )}
+                </div>
+
+                {/* 3. STOCKS GRID */}
                 <div className="stocks-grid">
                     {filteredStocks.length > 0 ? (
                         filteredStocks.map(item => (
@@ -353,11 +339,11 @@ function Stocks() {
                             </div>
                         ))
                     ) : (
-                        <p className="no-results">No items found matching your search.</p>
+                        <p className="no-results">No items found matching your selection.</p>
                     )}
                 </div>
             </main>
-
+            
             {/* Manage Categories Modal (admin only) */}
             {showCategoryModal && (
                 <div className="modal-overlay">
