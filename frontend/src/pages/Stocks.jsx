@@ -52,8 +52,8 @@ function Stocks() {
                headers: { "Authorization": `Bearer ${token()}` }
            })
                .then(res => res.json())
-               .then(data => setServices(data))
-               .catch(err => console.error("Failed to fetch services", err));
+               .then(data => setStocks(data))
+               .catch(err => console.error("Failed to fetch stocks", err));
    
            fetchCategories();
            // eslint-disable-next-line react-hooks/exhaustive-deps
