@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
-import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
+
+const API = "https://beautydelounge-backend.onrender.com";
 
 function ServicePricing() {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem("user"));
+    const isAdmin = user?.role === 'admin' || user?.role === 'static-admin';
+
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [form, setForm] = useState({ name: "", category: "", price: "" });
@@ -17,17 +22,46 @@ function ServicePricing() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
 
+    // Category management
+    const [categories, setCategories] = useState([]);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [isSavingCategory, setIsSavingCategory] = useState(false);
+    const [confirmDeleteCategory, setConfirmDeleteCategory] = useState(null);
+
+    const token = () => localStorage.getItem("token");
+
     const showToast = (message, type = 'error') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
     };
+
+    // Fetch service categories
+    const fetchCategories = () => {
+        fetch(`${API}/api/categories?type=service`, {
+            headers: { "Authorization": `Bearer ${token()}` }
+        })
+            .then(res => res.json())
+            .then(data => setCategories(Array.isArray(data) ? data : []))
+            .catch(err => console.error("Failed to fetch categories", err));
+    };
+
+    useEffect(() => {
+        fetch(`${API}/api/services`, {
+            headers: { "Authorization": `Bearer ${token()}` }
+        })
+            .then(res => res.json())
+            .then(data => setServices(data))
+            .catch(err => console.error("Failed to fetch services", err));
+
+        fetchCategories();
+    }, []);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         if (!file.type.startsWith('image/')) return showToast("Please select an image file only.");
         if (file.size > 5 * 1024 * 1024) return showToast("Image must be less than 5MB.");
-
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -35,12 +69,11 @@ function ServicePricing() {
     const uploadImage = async () => {
         if (!imageFile) return null;
         try {
-            const token = localStorage.getItem("token");
             const formData = new FormData();
             formData.append('image', imageFile);
-            const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
+            const res = await fetch(`${API}/api/upload`, {
                 method: 'POST',
-                headers: { "Authorization": `Bearer ${token}` },
+                headers: { "Authorization": `Bearer ${token()}` },
                 body: formData
             });
             const data = await res.json();
@@ -64,39 +97,28 @@ function ServicePricing() {
         setShowForm(true);
     };
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        fetch("https://beautydelounge-backend.onrender.com/api/services", {
-            headers: { "Authorization": `Bearer ${token}` }
-        })
-            .then(res => res.json())
-            .then(data => setServices(data))
-            .catch(err => console.error("Failed to fetch services", err));
-    }, []);
-
     const handleSave = async () => {
         if (!form.name || !form.price) return showToast("Please fill in all fields.");
         setIsSaving(true);
         try {
-            const token = localStorage.getItem("token");
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
             const url = editingItem
-                ? `https://beautydelounge-backend.onrender.com/api/services/${editingItem}`
-                : "https://beautydelounge-backend.onrender.com/api/services";
+                ? `${API}/api/services/${editingItem}`
+                : `${API}/api/services`;
 
             const res = await fetch(url, {
                 method: editingItem ? "PUT" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
                 body: JSON.stringify(finalForm)
             });
 
             if (res.ok) {
                 const data = await res.json();
-                setServices(editingItem ? services.map(s => s._id === editingItem ? data : s) : [...services, data]);
+                setServices(editingItem
+                    ? services.map(s => s._id === editingItem ? data : s)
+                    : [...services, data]
+                );
                 setShowForm(false);
                 showToast(editingItem ? "Updated!" : "Added!", "success");
             }
@@ -106,10 +128,9 @@ function ServicePricing() {
     };
 
     const confirmDeleteAction = async () => {
-        const token = localStorage.getItem("token");
-        await fetch(`https://beautydelounge-backend.onrender.com/api/services/${confirmDelete}`, {
+        await fetch(`${API}/api/services/${confirmDelete}`, {
             method: "DELETE",
-            headers: { "Authorization": `Bearer ${token}` }
+            headers: { "Authorization": `Bearer ${token()}` }
         });
         setServices(services.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
@@ -124,8 +145,46 @@ function ServicePricing() {
         setShowForm(true);
     };
 
+    // ── Category management (admin only) ──────────────────────────
+    const handleAddCategory = async () => {
+        const name = newCategoryName.trim();
+        if (!name) return showToast("Please enter a category name.");
+        setIsSavingCategory(true);
+        try {
+            const res = await fetch(`${API}/api/categories`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                body: JSON.stringify({ name, type: "service" })
+            });
+            const data = await res.json();
+            if (!res.ok) return showToast(data.error || "Failed to add category.");
+            setCategories([...categories, data]);
+            setNewCategoryName("");
+            showToast("Category added.", "success");
+        } catch (err) {
+            showToast("Failed to add category.");
+        } finally {
+            setIsSavingCategory(false);
+        }
+    };
+
+    const handleDeleteCategory = async (id) => {
+        try {
+            await fetch(`${API}/api/categories/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token()}` }
+            });
+            setCategories(categories.filter(c => c._id !== id));
+            showToast("Category deleted.", "success");
+        } catch (err) {
+            showToast("Failed to delete category.");
+        } finally {
+            setConfirmDeleteCategory(null);
+        }
+    };
+
     // Filter Logic
-    const categories = ["All", ...new Set(services.map(s => s.category).filter(Boolean))];
+    const filterOptions = ["All", ...categories.map(c => c.name)];
     const filteredServices = services.filter(service => {
         const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === "All" || service.category === selectedCategory;
@@ -163,26 +222,82 @@ function ServicePricing() {
                             />
                         </div>
                         <div className="category-filter">
-                            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="filter-select">
-                                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="filter-select"
+                            >
+                                {filterOptions.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
                 </header>
 
-                <button className="add-btn" onClick={openAdd}><FaPlus /> Add Service</button>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button className="add-btn" onClick={openAdd}><FaPlus /> Add Service</button>
+                    {isAdmin && (
+                        <button
+                            className="add-btn"
+                            style={{ background: '#8c7a60' }}
+                            onClick={() => setShowCategoryModal(true)}
+                        >
+                            <FaTags /> Manage Categories
+                        </button>
+                    )}
+                </div>
 
+                {/* Add / Edit Service Modal */}
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
                             <h3>{editingItem ? "Edit Service" : "Add Service"}</h3>
-                            <input placeholder="Service Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                            <input placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
-                            <input placeholder="Price (₱)" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+                            <input
+                                placeholder="Service Name"
+                                value={form.name}
+                                onChange={e => setForm({ ...form, name: e.target.value })}
+                            />
+
+                            {/* Category dropdown */}
+                            <select
+                                value={form.category}
+                                onChange={e => setForm({ ...form, category: e.target.value })}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #dcd5c9',
+                                    background: '#faf8f5',
+                                    color: form.category ? '#3a3020' : '#8c7a60',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                <option value="">— Select Category —</option>
+                                {categories.map(cat => (
+                                    <option key={cat._id} value={cat.name}>{cat.name}</option>
+                                ))}
+                            </select>
+
+                            <input
+                                placeholder="Price (₱)"
+                                type="number"
+                                value={form.price}
+                                onChange={e => setForm({ ...form, price: e.target.value })}
+                            />
                             <div className="image-upload-box" onClick={() => document.getElementById('serviceImageInput').click()}>
-                                {imagePreview ? <img src={imagePreview} alt="preview" className="image-preview" /> : <div className="image-upload-placeholder"><span>Click to add image</span></div>}
+                                {imagePreview
+                                    ? <img src={imagePreview} alt="preview" className="image-preview" />
+                                    : <div className="image-upload-placeholder"><span>Click to add image</span></div>
+                                }
                             </div>
-                            <input id="serviceImageInput" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                            <input
+                                id="serviceImageInput"
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={handleImageChange}
+                            />
                             <div className="modal-actions">
                                 <button onClick={handleSave}>Save</button>
                                 <button className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
@@ -196,7 +311,10 @@ function ServicePricing() {
                         filteredServices.map(item => (
                             <div key={item._id} className="stock-card">
                                 <div className="stock-card-image">
-                                    {item.imageUrl ? <img src={item.imageUrl} alt={item.name} /> : <div className="stock-no-image">✂️</div>}
+                                    {item.imageUrl
+                                        ? <img src={item.imageUrl} alt={item.name} />
+                                        : <div className="stock-no-image">✂️</div>
+                                    }
                                 </div>
                                 <div className="stock-card-body">
                                     <h3 className="stock-card-name">{item.name}</h3>
@@ -217,6 +335,79 @@ function ServicePricing() {
                 </div>
             </main>
 
+            {/* Manage Categories Modal (admin only) */}
+            {showCategoryModal && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '420px' }}>
+                        <h3 style={{ marginBottom: '16px' }}>Manage Service Categories</h3>
+
+                        {/* Add new category */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                            <input
+                                placeholder="New category name..."
+                                value={newCategoryName}
+                                onChange={e => setNewCategoryName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+                                style={{ flex: 1 }}
+                            />
+                            <button onClick={handleAddCategory} disabled={isSavingCategory}>
+                                {isSavingCategory ? '...' : <><FaPlus /> Add</>}
+                            </button>
+                        </div>
+
+                        {/* Category list */}
+                        <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                            {categories.length === 0 ? (
+                                <p style={{ color: '#8c7a60', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                                    No categories yet. Add one above.
+                                </p>
+                            ) : (
+                                categories.map(cat => (
+                                    <div key={cat._id} style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        padding: '10px 12px', borderRadius: '8px', marginBottom: '6px',
+                                        background: '#faf8f5', border: '1px solid #e8e0d4'
+                                    }}>
+                                        <span style={{ color: '#3a3020', fontSize: '14px' }}>{cat.name}</span>
+                                        <button
+                                            className="icon-btn delete"
+                                            onClick={() => setConfirmDeleteCategory(cat._id)}
+                                            style={{ marginLeft: '8px' }}
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="modal-actions" style={{ marginTop: '16px' }}>
+                            <button className="cancel-btn" onClick={() => setShowCategoryModal(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Category */}
+            {confirmDeleteCategory && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
+                        <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
+                        <h3 style={{ marginBottom: '8px' }}>Delete Category?</h3>
+                        <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>
+                            Existing services with this category will not be affected.
+                        </p>
+                        <div className="modal-actions">
+                            <button onClick={() => handleDeleteCategory(confirmDeleteCategory)} style={{ background: '#e74c3c' }}>
+                                Yes, Delete
+                            </button>
+                            <button className="cancel-btn" onClick={() => setConfirmDeleteCategory(null)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Service */}
             {confirmDelete && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>

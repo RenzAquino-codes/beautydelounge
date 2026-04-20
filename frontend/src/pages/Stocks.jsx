@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
-import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
+
+const API = "https://beautydelounge-backend.onrender.com";
 
 function Stocks() {
     const navigate = useNavigate();
     const location = useLocation();
+    const user = JSON.parse(localStorage.getItem("user"));
+    const isAdmin = user?.role === 'admin' || user?.role === 'static-admin';
+
     const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
@@ -17,19 +22,47 @@ function Stocks() {
     const [imagePreview, setImagePreview] = useState('');
     const [searchTerm, setSearchTerm] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+
+    // Category management
+    const [categories, setCategories] = useState([]);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [isSavingCategory, setIsSavingCategory] = useState(false);
+    const [confirmDeleteCategory, setConfirmDeleteCategory] = useState(null);
+
+    const token = () => localStorage.getItem("token");
+
+    const showToast = (message, type = 'error') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
+    };
+
+    // Fetch categories for stocks
+    const fetchCategories = () => {
+        fetch(`${API}/api/categories?type=stock`, {
+            headers: { "Authorization": `Bearer ${token()}` }
+        })
+            .then(res => res.json())
+            .then(data => setCategories(Array.isArray(data) ? data : []))
+            .catch(err => console.error("Failed to fetch categories", err));
+    };
+
+    useEffect(() => {
+        fetch(`${API}/api/stocks`, {
+            headers: { "Authorization": `Bearer ${token()}` }
+        })
+            .then(res => res.json())
+            .then(data => setStocks(data))
+            .catch(err => console.error("Failed to fetch stocks", err));
+
+        fetchCategories();
+    }, []);
+
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        if (!file.type.startsWith('image/')) {
-            showToast("Please select an image file only.");
-            return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-            showToast("Image must be less than 5MB.");
-            return;
-        }
-
+        if (!file.type.startsWith('image/')) { showToast("Please select an image file only."); return; }
+        if (file.size > 5 * 1024 * 1024) { showToast("Image must be less than 5MB."); return; }
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -37,32 +70,20 @@ function Stocks() {
     const uploadImage = async () => {
         if (!imageFile) return null;
         try {
-            const token = localStorage.getItem("token");
             const formData = new FormData();
             formData.append('image', imageFile);
-            const res = await fetch('https://beautydelounge-backend.onrender.com/api/upload', {
+            const res = await fetch(`${API}/api/upload`, {
                 method: 'POST',
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                },
+                headers: { "Authorization": `Bearer ${token()}` },
                 body: formData
             });
-            if (!res.ok) {
-                showToast("Image upload failed. Saving without image.");
-                return null;
-            }
+            if (!res.ok) { showToast("Image upload failed. Saving without image."); return null; }
             const data = await res.json();
             return data.imageUrl;
         } catch (err) {
             showToast("Image upload failed. Saving without image.");
             return null;
         }
-    };
-
-    // Toast function
-    const showToast = (message, type = 'error') => {
-        setToast({ show: true, message, type });
-        setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
     };
 
     const handleLogout = () => {
@@ -79,44 +100,25 @@ function Stocks() {
         setShowForm(true);
     };
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        })
-            .then(res => res.json())
-            .then(data => setStocks(data))
-            .catch(err => console.error("Failed to fetch stocks", err));
-    }, []);
-
     const handleSave = async () => {
         if (!form.name || !form.quantity) return showToast("Please fill in all fields.");
         setIsSaving(true);
         try {
-            const token = localStorage.getItem("token");
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
 
             if (editingItem) {
-                const res = await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${editingItem}`, {
+                const res = await fetch(`${API}/api/stocks/${editingItem}`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
                     body: JSON.stringify(finalForm)
                 });
                 const updated = await res.json();
                 setStocks(stocks.map(s => s._id === editingItem ? updated : s));
             } else {
-                const res = await fetch("https://beautydelounge-backend.onrender.com/api/stocks", {
+                const res = await fetch(`${API}/api/stocks`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
                     body: JSON.stringify(finalForm)
                 });
                 const created = await res.json();
@@ -132,17 +134,10 @@ function Stocks() {
         }
     };
 
-    const handleDelete = (id) => {
-        setConfirmDelete(id);
-    };
-
     const confirmDeleteAction = async () => {
-        const token = localStorage.getItem("token");
-        await fetch(`https://beautydelounge-backend.onrender.com/api/stocks/${confirmDelete}`, {
+        await fetch(`${API}/api/stocks/${confirmDelete}`, {
             method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
+            headers: { "Authorization": `Bearer ${token()}` }
         });
         setStocks(stocks.filter(s => s._id !== confirmDelete));
         setConfirmDelete(null);
@@ -157,17 +152,49 @@ function Stocks() {
         setShowForm(true);
     };
 
-    // const filteredStocks = stocks.filter(item =>
-    //     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //     item.category?.toLowerCase().includes(searchTerm.toLowerCase())
-    // );
+    // ── Category management (admin only) ──────────────────────────
+    const handleAddCategory = async () => {
+        const name = newCategoryName.trim();
+        if (!name) return showToast("Please enter a category name.");
+        setIsSavingCategory(true);
+        try {
+            const res = await fetch(`${API}/api/categories`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                body: JSON.stringify({ name, type: "stock" })
+            });
+            const data = await res.json();
+            if (!res.ok) return showToast(data.error || "Failed to add category.");
+            setCategories([...categories, data]);
+            setNewCategoryName("");
+            showToast("Category added.", "success");
+        } catch (err) {
+            showToast("Failed to add category.");
+        } finally {
+            setIsSavingCategory(false);
+        }
+    };
+
+    const handleDeleteCategory = async (id) => {
+        try {
+            await fetch(`${API}/api/categories/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token()}` }
+            });
+            setCategories(categories.filter(c => c._id !== id));
+            showToast("Category deleted.", "success");
+        } catch (err) {
+            showToast("Failed to delete category.");
+        } finally {
+            setConfirmDeleteCategory(null);
+        }
+    };
 
     const filteredStocks = stocks.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              item.category?.toLowerCase().includes(searchTerm.toLowerCase());
-                              
+        const matchesSearch =
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.category?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesLowStock = showLowStockOnly ? item.quantity < 5 : true;
-
         return matchesSearch && matchesLowStock;
     });
 
@@ -195,7 +222,6 @@ function Stocks() {
                 <header className="dashboard-header">
                     <h1>Stocks</h1>
                     <p>Manage your inventory</p>
-
                     <div className="search-container">
                         <input
                             type="text"
@@ -204,41 +230,81 @@ function Stocks() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="search-input"
                         />
-
                         {showLowStockOnly && (
-                        <button 
-                            className="cancel-btn" 
-                            onClick={() => setShowLowStockOnly(false)}
-                            style={{ padding: '0 15px', whiteSpace: 'nowrap' }}
-                        >
-                            Show All Items
-                        </button>
-                    )}
-
+                            <button
+                                className="cancel-btn"
+                                onClick={() => setShowLowStockOnly(false)}
+                                style={{ padding: '0 15px', whiteSpace: 'nowrap' }}
+                            >
+                                Show All Items
+                            </button>
+                        )}
                     </div>
                 </header>
 
-                <button className="add-btn" onClick={openAdd}><FaPlus /> Add Item</button>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button className="add-btn" onClick={openAdd}><FaPlus /> Add Item</button>
+                    {isAdmin && (
+                        <button
+                            className="add-btn"
+                            style={{ background: '#8c7a60' }}
+                            onClick={() => setShowCategoryModal(true)}
+                        >
+                            <FaTags /> Manage Categories
+                        </button>
+                    )}
+                </div>
 
+                {/* Add / Edit Item Modal */}
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
                             <h3>{editingItem ? "Edit Item" : "Add Item"}</h3>
-                            <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                            <input placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
-                            <input placeholder="Quantity" type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} />
-                            <input placeholder="Unit (e.g. bottles)" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} />
+                            <input
+                                placeholder="Name"
+                                value={form.name}
+                                onChange={e => setForm({ ...form, name: e.target.value })}
+                            />
+
+                            {/* Category dropdown */}
+                            <select
+                                value={form.category}
+                                onChange={e => setForm({ ...form, category: e.target.value })}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #dcd5c9',
+                                    background: '#faf8f5',
+                                    color: form.category ? '#3a3020' : '#8c7a60',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                <option value="">— Select Category —</option>
+                                {categories.map(cat => (
+                                    <option key={cat._id} value={cat.name}>{cat.name}</option>
+                                ))}
+                            </select>
+
+                            <input
+                                placeholder="Quantity"
+                                type="number"
+                                value={form.quantity}
+                                onChange={e => setForm({ ...form, quantity: e.target.value })}
+                            />
+                            <input
+                                placeholder="Unit (e.g. bottles)"
+                                value={form.unit}
+                                onChange={e => setForm({ ...form, unit: e.target.value })}
+                            />
                             <div className="image-upload-box" onClick={(e) => {
                                 e.stopPropagation();
                                 document.getElementById('stockImageInput').click();
                             }}>
-                                {imagePreview ? (
-                                    <img src={imagePreview} alt="preview" className="image-preview" />
-                                ) : (
-                                    <div className="image-upload-placeholder">
-                                        <span>Click to add image</span>
-                                    </div>
-                                )}
+                                {imagePreview
+                                    ? <img src={imagePreview} alt="preview" className="image-preview" />
+                                    : <div className="image-upload-placeholder"><span>Click to add image</span></div>
+                                }
                             </div>
                             <input
                                 key={editingItem || 'new'}
@@ -262,7 +328,6 @@ function Stocks() {
 
                 <div className="stocks-grid">
                     {filteredStocks.length > 0 ? (
-                        // Changed stocks.map to filteredStocks.map
                         filteredStocks.map(item => (
                             <div key={item._id} className="stock-card">
                                 <div className="stock-card-image">
@@ -280,7 +345,7 @@ function Stocks() {
                                         </span>
                                         <div className="stock-card-actions">
                                             <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
-                                            <button className="icon-btn delete" onClick={() => handleDelete(item._id)}><FaTrash /></button>
+                                            <button className="icon-btn delete" onClick={() => setConfirmDelete(item._id)}><FaTrash /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -292,7 +357,79 @@ function Stocks() {
                 </div>
             </main>
 
-            {/* Confirm Delete Modal */}
+            {/* Manage Categories Modal (admin only) */}
+            {showCategoryModal && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '420px' }}>
+                        <h3 style={{ marginBottom: '16px' }}>Manage Stock Categories</h3>
+
+                        {/* Add new category */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                            <input
+                                placeholder="New category name..."
+                                value={newCategoryName}
+                                onChange={e => setNewCategoryName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+                                style={{ flex: 1 }}
+                            />
+                            <button onClick={handleAddCategory} disabled={isSavingCategory}>
+                                {isSavingCategory ? '...' : <><FaPlus /> Add</>}
+                            </button>
+                        </div>
+
+                        {/* Category list */}
+                        <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                            {categories.length === 0 ? (
+                                <p style={{ color: '#8c7a60', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+                                    No categories yet. Add one above.
+                                </p>
+                            ) : (
+                                categories.map(cat => (
+                                    <div key={cat._id} style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        padding: '10px 12px', borderRadius: '8px', marginBottom: '6px',
+                                        background: '#faf8f5', border: '1px solid #e8e0d4'
+                                    }}>
+                                        <span style={{ color: '#3a3020', fontSize: '14px' }}>{cat.name}</span>
+                                        <button
+                                            className="icon-btn delete"
+                                            onClick={() => setConfirmDeleteCategory(cat._id)}
+                                            style={{ marginLeft: '8px' }}
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="modal-actions" style={{ marginTop: '16px' }}>
+                            <button className="cancel-btn" onClick={() => setShowCategoryModal(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Category */}
+            {confirmDeleteCategory && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
+                        <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
+                        <h3 style={{ marginBottom: '8px' }}>Delete Category?</h3>
+                        <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>
+                            Existing stock items with this category will not be affected.
+                        </p>
+                        <div className="modal-actions">
+                            <button onClick={() => handleDeleteCategory(confirmDeleteCategory)} style={{ background: '#e74c3c' }}>
+                                Yes, Delete
+                            </button>
+                            <button className="cancel-btn" onClick={() => setConfirmDeleteCategory(null)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Item */}
             {confirmDelete && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
@@ -302,14 +439,9 @@ function Stocks() {
                             This action cannot be undone.
                         </p>
                         <div className="modal-actions">
-                            <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>
-                                Yes, Delete
-                            </button>
-                            <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>
-                                Cancel
-                            </button>
+                            <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>Yes, Delete</button>
+                            <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>Cancel</button>
                         </div>
-
                     </div>
                 </div>
             )}
@@ -323,7 +455,6 @@ function Stocks() {
                     <span className="toast-message">{toast.message}</span>
                 </div>
             )}
-
         </div>
     );
 }

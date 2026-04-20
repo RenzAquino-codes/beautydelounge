@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
-import { FaArrowLeft, FaPlus, FaTrash, FaEdit, FaCheckSquare, FaSquare, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaEdit, FaCheckSquare, FaSquare, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 function TransactionHistory() {
     const navigate = useNavigate();
@@ -13,7 +12,6 @@ function TransactionHistory() {
     const [services, setServices] = useState([]);
     const [clientError, setClientError] = useState('');
     const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
-    const [confirmDelete, setConfirmDelete] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
@@ -29,7 +27,6 @@ function TransactionHistory() {
         navigate("/");
     };
 
-    // Fetch transactions
     // Fetch transactions
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -52,16 +49,14 @@ function TransactionHistory() {
             .catch(err => console.error(err));
     }, []);
 
-    // Handle service checkbox — only one can be selected at a time
+    // Handle service checkbox
     const handleServiceSelect = (serviceName, servicePrice) => {
         const alreadySelected = form.service.includes(serviceName);
 
         let updatedServices;
         if (alreadySelected) {
-            // Uncheck — remove from array
             updatedServices = form.service.filter(s => s !== serviceName);
         } else {
-            // Check — add to array
             updatedServices = [...form.service, serviceName];
         }
 
@@ -118,6 +113,7 @@ function TransactionHistory() {
             setIsSaving(false);
         }
     };
+
     const openEdit = (transaction) => {
         setForm({
             client: transaction.client,
@@ -129,32 +125,6 @@ function TransactionHistory() {
         });
         setEditingItem(transaction._id);
         setShowForm(true);
-    };
-
-    const handleDelete = (id) => {
-        setConfirmDelete(id);
-    };
-
-    const confirmDeleteAction = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`https://beautydelounge-backend.onrender.com/api/transactions/${confirmDelete}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-
-            if (res.ok) {
-                // Only remove from UI if the database actually deleted it!
-                setTransactions(transactions.filter(t => t._id !== confirmDelete));
-                showToast("Transaction deleted.", "success");
-            } else {
-                showToast("Failed to delete from server.");
-            }
-        } catch (err) {
-            showToast("Network error.");
-        } finally {
-            setConfirmDelete(null);
-        }
     };
 
     const formatTime = (time) => {
@@ -205,7 +175,6 @@ function TransactionHistory() {
                             className="search-input"
                         />
                     </div>
-
                 </header>
 
                 <button className="add-btn" onClick={() => {
@@ -328,7 +297,6 @@ function TransactionHistory() {
                             filteredTransactions.map(t => (
                                 <tr key={t._id}>
                                     <td>{t.client}</td>
-                                    {/* join(",") turns the array of services into a nice readable list */}
                                     <td>{Array.isArray(t.service) ? t.service.join(", ") : t.service}</td>
                                     <td>₱{Number(t.amount).toLocaleString()}</td>
                                     <td>{t.date}</td>
@@ -338,20 +306,17 @@ function TransactionHistory() {
                                             {t.status}
                                         </span>
                                     </td>
-
                                     <td>
+                                        {/* Delete button removed — edit only */}
                                         <button className="icon-btn edit" onClick={() => openEdit(t)}>
                                             <FaEdit />
-                                        </button>
-                                        <button className="icon-btn delete" onClick={() => handleDelete(t._id)}>
-                                            <FaTrash />
                                         </button>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="no-results">
+                                <td colSpan="7" className="no-results">
                                     No transactions found matching your search.
                                 </td>
                             </tr>
@@ -359,26 +324,6 @@ function TransactionHistory() {
                     </tbody>
                 </table>
             </main>
-            {/* Confirm Delete Modal */}
-            {confirmDelete && (
-                <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
-                        <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
-                        <h3 style={{ marginBottom: '8px' }}>Delete Transaction?</h3>
-                        <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>
-                            This action cannot be undone.
-                        </p>
-                        <div className="modal-actions">
-                            <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>
-                                Yes, Delete
-                            </button>
-                            <button className="cancel-btn" onClick={() => setConfirmDelete(null)}>
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Toast */}
             {toast.show && (
@@ -389,7 +334,6 @@ function TransactionHistory() {
                     <span className="toast-message">{toast.message}</span>
                 </div>
             )}
-
         </div>
     );
 }

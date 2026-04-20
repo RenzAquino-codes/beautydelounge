@@ -2,6 +2,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -36,10 +37,23 @@ const storage = new CloudinaryStorage({
         allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
     },
 });
-const upload = multer({ storage })
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.error("Error connecting to MongoDB:", err));
+const upload = multer({ storage });
+
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/beautydelounge';
+const mongooseOptions = {
+    serverSelectionTimeoutMS: 10000,
+};
+
+async function connectToMongo() {
+    try {
+        await mongoose.connect(mongoUri, mongooseOptions);
+        console.log('Connected to MongoDB');
+    } catch (err) {
+        console.error('Error connecting to MongoDB:', err);
+        process.exit(1);
+    }
+}
+
 // =====================
 // SCHEMAS
 // =====================
@@ -77,6 +91,18 @@ const transactionSchema = new mongoose.Schema({
     time: { type: String },
     status: { type: String, default: "Paid" }
 });
+
+// =====================
+// CATEGORY SCHEMA
+// type: 'stock' | 'service'
+// =====================
+const categorySchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    type: { type: String, enum: ['stock', 'service'], required: true }
+});
+// Prevent duplicate category names per type
+categorySchema.index({ name: 1, type: 1 }, { unique: true });
+const Category = mongoose.model("Category", categorySchema);
 
 // =====================
 // TEMPORARY DATA SCHEMAS (TTL)
@@ -130,6 +156,14 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+// Admin-only middleware
+const verifyAdmin = (req, res, next) => {
+    if (req.user?.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required." });
+    }
+    next();
+};
+
 // =====================
 // Default Admin Account Creation
 // This function needs to be defined BEFORE app.listen
@@ -147,7 +181,7 @@ async function createDefaultAdmin() {
             const hashedPassword = await bcrypt.hash(adminPassword, 10);
             const defaultAdmin = new User({
                 firstName: 'Default',
-                middleName: '', 
+                middleName: 'Default',
                 lastName: 'Admin',
                 email: adminEmail,
                 password: hashedPassword,
@@ -203,6 +237,7 @@ app.post("/api/login", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 // =====================
 // REGISTER ROUTES
 // =====================
@@ -317,6 +352,50 @@ app.post("/api/verify-email", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
+// =====================
+// CATEGORY ROUTES
+// GET /api/categories?type=stock  (or ?type=service)
+// POST /api/categories            (admin only)
+// DELETE /api/categories/:id      (admin only)
+// =====================
+app.get("/api/categories", verifyToken, async (req, res) => {
+    try {
+        const filter = req.query.type ? { type: req.query.type } : {};
+        const categories = await Category.find(filter).sort({ name: 1 });
+        res.json(categories);
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.post("/api/categories", verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { name, type } = req.body;
+        if (!name || !type) return res.status(400).json({ error: "Name and type are required." });
+        const trimmed = name.trim();
+        if (!trimmed) return res.status(400).json({ error: "Category name cannot be empty." });
+
+        const category = new Category({ name: trimmed, type });
+        await category.save();
+        res.json(category);
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({ error: "Category already exists." });
+        }
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.delete("/api/categories/:id", verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        await Category.findByIdAndDelete(req.params.id);
+        res.json({ message: "Category deleted." });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // =====================
 // STOCKS ROUTES
 // =====================
@@ -609,7 +688,13 @@ app.get("/api/health", (req, res) => {
 });
 
 // The app.listen call MUST await createDefaultAdmin()
-app.listen(process.env.PORT || 5000, async () => { // Changed to async here
-    console.log(`Server running on port ${process.env.PORT || 5000}`);
-    await createDefaultAdmin(); // Call the async function here
-});
+async function startServer() {
+    await connectToMongo();
+    await createDefaultAdmin();
+
+    app.listen(process.env.PORT || 5000, () => {
+        console.log(`Server running on port ${process.env.PORT || 5000}`);
+    });
+}
+
+startServer();
