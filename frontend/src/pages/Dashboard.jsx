@@ -53,9 +53,9 @@ function Dashboard() {
 
     if (!user) return null;
 
-    return (
+   return (
         <div className="dashboard-container">
-            {/* Sidebar remains on the left */}
+            {/* Sidebar */}
             <aside className="sidebar">
                 <h2>BEA-UTY DE LOUNGE</h2>
                 <nav>
@@ -68,13 +68,13 @@ function Dashboard() {
                 </nav>
             </aside>
 
-            {/* Main Content pushed to the right */}
+            {/* Main Layout */}
             <main className="main-content">
                 <header className="dashboard-header">
                     <div className="header-top">
                         <div>
                             <h1>Dashboard</h1>
-                            <p>Welcome, <span className="highlight">{user?.firstName || "User"}!</span></p>
+                            <p>Welcome, <span className="highlight">{user?.firstName || "User"} {user?.lastName || ""}!</span></p>
                         </div>
                         <div className="datetime-display">
                             <div className="datetime-time">{formatTime(dateTime)}</div>
@@ -91,9 +91,14 @@ function Dashboard() {
                     </div>
                 )}
 
+                {/* module Tiles */}
                 <div className="module-grid">
                     {modules.map((module, index) => (
-                        <div key={index} className="module-card" onClick={() => navigate(module.path)}>
+                        <div
+                            key={index}
+                            className="module-card"
+                            onClick={() => handleModuleClick(module.path)}
+                        >
                             <div className="module-icon">{module.icon}</div>
                             <h2>{module.title}</h2>
                             <p>Click to view</p>
