@@ -351,14 +351,15 @@ function ServicePricing() {
                                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
                                 style={{
                                     flex: 1,
-                                    padding: '12px 14px',
-                                    border: '1px solid #d9cfc0',
+                                    padding: '14px 16px',
+                                    border: '2px solid #c9a84c',
                                     borderRadius: '8px',
-                                    fontSize: '14px',
+                                    fontSize: '15px',
                                     color: '#3a3020',
-                                    background: '#ffffff',
+                                    background: '#fffaf5',
                                     outline: 'none',
-                                    transition: 'all 0.3s ease'
+                                    transition: 'all 0.3s ease',
+                                    fontWeight: '500'
                                 }}
                             />
                             <button
