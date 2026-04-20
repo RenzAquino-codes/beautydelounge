@@ -1215,12 +1215,6 @@
     }
 }
 
-
-/* =====================
-    FILTER & VIEWING FIXES
-   ===================== */
-
-/* The main container for the Type/Category filter */
 .filter-controls {
     background: #ffffff;
     padding: 20px;
