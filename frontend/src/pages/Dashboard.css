@@ -1122,7 +1122,7 @@
     flex: 1; 
 }
 .filter-select {
-  width: 100%;
+    width: 100%;
     padding: 12px 15px;
     border-radius: 10px;
     border: 1px solid #d9cfc0;
@@ -1136,7 +1136,7 @@
     background-repeat: no-repeat;
     background-position: calc(100% - 15px) center;
     padding-right: 40px;
-    transition: all 0.3s ease
+    transition: all 0.3s ease;
 }
 
 .filter-select:focus {

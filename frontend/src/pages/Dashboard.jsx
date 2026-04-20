@@ -51,6 +51,10 @@ function Dashboard() {
         return true;
     });
 
+    const handleModuleClick = (path) => {
+        navigate(path);
+    };
+
     if (!user) return null;
 
    return (

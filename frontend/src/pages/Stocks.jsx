@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
 
 const API = "https://beautydelounge-backend.onrender.com";
 
-function ServicePricing() {
+function Stocks() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
     const isAdmin = user?.role === 'admin' || user?.role === 'static-admin';
