@@ -158,7 +158,8 @@ const verifyToken = (req, res, next) => {
 
 // Admin-only middleware
 const verifyAdmin = (req, res, next) => {
-    if (req.user?.role !== 'admin') {
+    // Check for both admin types so static-admins can also add categories
+    if (req.user?.role !== 'admin' && req.user?.role !== 'static-admin') {
         return res.status(403).json({ error: "Admin access required." });
     }
     next();
