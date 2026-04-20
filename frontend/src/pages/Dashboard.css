@@ -1215,27 +1215,35 @@
     }
 }
 
+
 /* =====================
-    TYPE VIEWING FIXES
+   FIXED VIEWING LAYOUT
    ===================== */
 
-/* Container for the Filter at the top */
-.filter-controls {
+/* The new top box for category viewing */
+.filter-controls-container {
     background: #ffffff;
     padding: 20px;
     border-radius: 12px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     border: 1px solid #e8e0d4;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
     display: flex;
-    flex-direction: column; /* Stacks label above the box */
-    gap: 8px;
-    width: 100%;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-/* Makes the "View by Category" text bold and visible */
-.filter-controls label {
-    display: block;
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-group label {
     font-weight: 700;
     font-size: 13px;
     color: #4a3f2f;
@@ -1243,9 +1251,7 @@
     letter-spacing: 1px;
 }
 
-/* Styles the Dropdown box so it's easy to click */
-.filter-select, 
-.filter-controls select {
+.filter-select {
     width: 100%;
     max-width: 400px;
     padding: 12px 15px;
@@ -1256,17 +1262,33 @@
     font-size: 15px;
     outline: none;
     transition: all 0.3s ease;
-    cursor: pointer;
-    appearance: auto; /* Ensures the arrow is visible */
 }
 
 .filter-select:focus {
     border-color: #c9a84c;
     background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
 }
 
-/* Fix for the Search and Add Item row below the filter */
+/* Manage Categories Button inside filter box */
+.manage-cats-btn {
+    background: #8c7a60;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+}
+
+.manage-cats-btn:hover {
+    background: #766650;
+}
+
+/* Row for Search and Add Button */
 .header-actions {
     display: flex;
     align-items: center;
@@ -1275,11 +1297,21 @@
     flex-wrap: wrap;
 }
 
-/* Ensure the Add button doesn't have too much bottom margin now */
-.add-btn {
-    margin-bottom: 0 !important; 
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.header-actions .search-container {
+    flex: 1;
+    margin: 0;
+}
+
+.header-actions .add-btn {
+    margin: 0;
+    height: 48px;
+    padding: 0 25px;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .filter-controls-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
