@@ -349,9 +349,33 @@ function ServicePricing() {
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
-                                style={{ flex: 1 }}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px 14px',
+                                    border: '1px solid #d9cfc0',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    color: '#3a3020',
+                                    background: '#ffffff',
+                                    outline: 'none',
+                                    transition: 'all 0.3s ease'
+                                }}
                             />
-                            <button onClick={handleAddCategory} disabled={isSavingCategory}>
+                            <button
+                                onClick={handleAddCategory}
+                                disabled={isSavingCategory}
+                                style={{
+                                    padding: '12px 16px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: '#c9a84c',
+                                    color: '#ffffff',
+                                    cursor: isSavingCategory ? 'not-allowed' : 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
                                 {isSavingCategory ? '...' : <><FaPlus /> Add</>}
                             </button>
                         </div>
