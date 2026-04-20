@@ -55,6 +55,7 @@ function ServicePricing() {
             .catch(err => console.error("Failed to fetch services", err));
 
         fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleImageChange = (e) => {

@@ -48,15 +48,16 @@ function Stocks() {
     };
 
     useEffect(() => {
-        fetch(`${API}/api/stocks`, {
-            headers: { "Authorization": `Bearer ${token()}` }
-        })
-            .then(res => res.json())
-            .then(data => setStocks(data))
-            .catch(err => console.error("Failed to fetch stocks", err));
-
-        fetchCategories();
-    }, []);
+           fetch(`${API}/api/services`, {
+               headers: { "Authorization": `Bearer ${token()}` }
+           })
+               .then(res => res.json())
+               .then(data => setServices(data))
+               .catch(err => console.error("Failed to fetch services", err));
+   
+           fetchCategories();
+           // eslint-disable-next-line react-hooks/exhaustive-deps
+       }, []);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
