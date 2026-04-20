@@ -1215,6 +1215,11 @@
     }
 }
 
+/* =====================
+    TYPE VIEWING FIXES
+   ===================== */
+
+/* Container for the Filter at the top */
 .filter-controls {
     background: #ffffff;
     padding: 20px;
@@ -1223,11 +1228,12 @@
     border: 1px solid #e8e0d4;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: column; /* Stacks label above the box */
+    gap: 8px;
+    width: 100%;
 }
 
-/* Styling the Label specifically */
+/* Makes the "View by Category" text bold and visible */
 .filter-controls label {
     display: block;
     font-weight: 700;
@@ -1237,7 +1243,7 @@
     letter-spacing: 1px;
 }
 
-/* Styling the Select/Dropdown box */
+/* Styles the Dropdown box so it's easy to click */
 .filter-select, 
 .filter-controls select {
     width: 100%;
@@ -1249,32 +1255,31 @@
     color: #3a3020;
     font-size: 15px;
     outline: none;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
+    appearance: auto; /* Ensures the arrow is visible */
 }
 
-.filter-select:focus,
-.filter-controls select:focus {
+.filter-select:focus {
     border-color: #c9a84c;
     background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
 }
 
-/* Ensuring the Search and Add row looks aligned */
+/* Fix for the Search and Add Item row below the filter */
 .header-actions {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     flex-wrap: wrap;
 }
 
-/* Responsiveness: Stack filters on small screens */
-@media (max-width: 600px) {
-    .filter-controls {
-        padding: 15px;
-    }
-    
-    .filter-controls select {
-        max-width: 100%;
-    }
+/* Ensure the Add button doesn't have too much bottom margin now */
+.add-btn {
+    margin-bottom: 0 !important; 
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
