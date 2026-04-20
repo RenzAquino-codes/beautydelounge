@@ -6,29 +6,26 @@
     display: flex;
     flex-direction: row;
     min-height: 100vh;
-    width: 100vw;
+    width: 100%; /* Changed from 100vw to prevent horizontal scroll */
     margin: 0;
     padding: 0;
     background-color: #f5f0e8;
-    font-family: "Segoe", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    overflow-x: hidden;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* =====================
-   SIDEBAR
-===================== */
 .sidebar {
-    width: 250px;
-    flex-shrink: 0;
+    width: 260px; /* Slightly wider for better spacing */
+    min-width: 260px; /* Ensures it doesn't shrink */
     background-color: #ede5d8;
     color: #4a3f2f;
     padding: 30px 20px;
     border-right: 1px solid #d9cfc0;
     display: flex;
     flex-direction: column;
-    z-index: 10;
+    height: 100vh;
+    position: sticky; /* Keeps it visible while scrolling content */
+    top: 0;
 }
-
 .sidebar h2 {
     color: #4a3f2f;
     text-align: center;
@@ -74,13 +71,19 @@
    MAIN CONTENT
 ===================== */
 .main-content {
-    flex: 1;
-    padding: 50px;
+    flex-grow: 1; /* Takes up remaining space */
+    padding: 40px;
+    overflow-y: auto;
     background-color: #f5f0e8;
 }
 
+/* Fix for the Header overlapping */
 .dashboard-header {
-    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    width: 100%;
 }
 
 .dashboard-header h1 {
