@@ -605,8 +605,8 @@ app.post("/api/admin/create-user", verifyToken, async (req, res) => {
         });
         await pendingUser.save();
 
-        await sgMail.send({
-            from: 'renzfrancisaquino@gmail.com',
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
             to: email,
             subject: 'Your Beauty De Lounge Account Verification',
             html: `
@@ -643,8 +643,8 @@ app.post("/api/forgot-password", async (req, res) => {
         const resetRecord = new ResetCode({ email, code });
         await resetRecord.save();
 
-        await sgMail.send({
-            from: 'renzfrancisaquino@gmail.com',
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
             to: email,
             subject: 'Password Reset Code',
             html: `
