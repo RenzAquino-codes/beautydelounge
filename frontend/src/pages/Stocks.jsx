@@ -475,11 +475,11 @@ function Stocks() {
     const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
-    
+
     // RESTORED: Uses quantity and unit instead of price
     const [form, setForm] = useState({ name: "", category: "", quantity: "", unit: "" });
     const [stocks, setStocks] = useState([]);
-    
+
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [imageFile, setImageFile] = useState(null);
@@ -571,7 +571,7 @@ function Stocks() {
         try {
             const imageUrl = await uploadImage();
             const finalForm = imageUrl ? { ...form, imageUrl } : form;
-            
+
             // RESTORED: Pointing to /api/stocks
             const url = editingItem
                 ? `${API}/api/stocks/${editingItem}`
@@ -716,7 +716,7 @@ function Stocks() {
                             <FaTags /> Manage Categories
                         </button>
                     )}
-                    
+
                     {/* RESTORED: Low stock toggle */}
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '30px', marginLeft: 'auto', cursor: 'pointer', fontSize: '14px', color: '#6b5c45', fontWeight: 500 }}>
                         <input
@@ -840,15 +840,20 @@ function Stocks() {
                         <h3 style={{ marginBottom: '16px' }}>Manage Stock Categories</h3>
 
                         {/* REPAIRED: Bulletproof Flexbox Fix for Squished Input */}
-                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto',
+                            gap: '10px',
+                            marginBottom: '20px',
+                            alignItems: 'stretch'
+                        }}>
                             <input
                                 placeholder="New category name..."
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
                                 style={{
-                                    flex: 1,           /* Takes up remaining space */
-                                    minWidth: 0,       /* Prevents squishing */
+                                    width: '100%',
                                     padding: '12px 14px',
                                     border: '2px solid #c9a84c',
                                     borderRadius: '8px',
@@ -862,7 +867,6 @@ function Stocks() {
                                 onClick={handleAddCategory}
                                 disabled={isSavingCategory}
                                 style={{
-                                    flexShrink: 0,     /* Prevents button from shrinking */
                                     padding: '0 24px',
                                     borderRadius: '8px',
                                     border: 'none',
@@ -871,6 +875,7 @@ function Stocks() {
                                     cursor: isSavingCategory ? 'not-allowed' : 'pointer',
                                     fontWeight: '600',
                                     fontSize: '14px',
+                                    whiteSpace: 'nowrap' // Prevents text from wrapping
                                 }}
                             >
                                 {isSavingCategory ? '...' : <><FaPlus /> Add</>}

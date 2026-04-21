@@ -343,7 +343,13 @@ function ServicePricing() {
                         <h3 style={{ marginBottom: '16px' }}>Manage Service Categories</h3>
 
                         {/* Add new category */}
-                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', marginBottom: '20px' }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto',
+                            gap: '10px',
+                            marginBottom: '20px',
+                            alignItems: 'stretch'
+                        }}>
                             <input
                                 placeholder="New category name..."
                                 value={newCategoryName}
@@ -364,7 +370,7 @@ function ServicePricing() {
                                 onClick={handleAddCategory}
                                 disabled={isSavingCategory}
                                 style={{
-                                    padding: '12px 24px',
+                                    padding: '0 24px',
                                     borderRadius: '8px',
                                     border: 'none',
                                     background: '#c9a84c',
@@ -372,7 +378,7 @@ function ServicePricing() {
                                     cursor: isSavingCategory ? 'not-allowed' : 'pointer',
                                     fontWeight: '600',
                                     fontSize: '14px',
-                                    whiteSpace: 'nowrap'
+                                    whiteSpace: 'nowrap' // Prevents text from wrapping
                                 }}
                             >
                                 {isSavingCategory ? '...' : <><FaPlus /> Add</>}
