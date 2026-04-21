@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
 
@@ -458,4 +458,4 @@ function Stocks() {
     );
 }
 
-export default ServicePricing;
+export default Stocks;
