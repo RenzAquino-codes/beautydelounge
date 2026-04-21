@@ -38,7 +38,8 @@ function Stocks() {
 
     // Fetch service categories
     const fetchCategories = () => {
-        fetch(`${API}/api/categories?type=service`, {
+        // Change type=service to type=stock
+        fetch(`${API}/api/categories?type=stock`, {
             headers: { "Authorization": `Bearer ${token()}` }
         })
             .then(res => res.json())
@@ -155,7 +156,7 @@ function Stocks() {
             const res = await fetch(`${API}/api/categories`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
-                body: JSON.stringify({ name, type: "service" })
+                body: JSON.stringify({ name, type: "stock" })
             });
             const data = await res.json();
             if (!res.ok) return showToast(data.error || "Failed to add category.");
