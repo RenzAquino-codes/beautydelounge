@@ -345,14 +345,13 @@ function Stocks() {
                         <h3 style={{ marginBottom: '16px' }}>Manage Stock Categories</h3>
 
                         {/* Add new category */}
-                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'stretch' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', marginBottom: '20px' }}>
                             <input
                                 placeholder="New category name..."
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
                                 style={{
-                                    flex: '1 1 auto', /* Forces input to take up space */
                                     width: '100%',
                                     padding: '12px 14px',
                                     border: '2px solid #c9a84c',
@@ -367,9 +366,7 @@ function Stocks() {
                                 onClick={handleAddCategory}
                                 disabled={isSavingCategory}
                                 style={{
-                                    flex: '0 0 auto', /* Prevents button from stretching */
-                                    whiteSpace: 'nowrap',
-                                    padding: '0 20px',
+                                    padding: '12px 24px',
                                     borderRadius: '8px',
                                     border: 'none',
                                     background: '#c9a84c',
@@ -377,6 +374,7 @@ function Stocks() {
                                     cursor: isSavingCategory ? 'not-allowed' : 'pointer',
                                     fontWeight: '600',
                                     fontSize: '14px',
+                                    whiteSpace: 'nowrap'
                                 }}
                             >
                                 {isSavingCategory ? '...' : <><FaPlus /> Add</>}

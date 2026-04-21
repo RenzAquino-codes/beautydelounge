@@ -343,30 +343,28 @@ function ServicePricing() {
                         <h3 style={{ marginBottom: '16px' }}>Manage Service Categories</h3>
 
                         {/* Add new category */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', marginBottom: '20px' }}>
                             <input
                                 placeholder="New category name..."
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
                                 style={{
-                                    flex: 1,
-                                    padding: '14px 16px',
+                                    width: '100%',
+                                    padding: '12px 14px',
                                     border: '2px solid #c9a84c',
                                     borderRadius: '8px',
                                     fontSize: '15px',
                                     color: '#3a3020',
                                     background: '#fffaf5',
                                     outline: 'none',
-                                    transition: 'all 0.3s ease',
-                                    fontWeight: '500'
                                 }}
                             />
                             <button
                                 onClick={handleAddCategory}
                                 disabled={isSavingCategory}
                                 style={{
-                                    padding: '12px 16px',
+                                    padding: '12px 24px',
                                     borderRadius: '8px',
                                     border: 'none',
                                     background: '#c9a84c',
@@ -374,7 +372,7 @@ function ServicePricing() {
                                     cursor: isSavingCategory ? 'not-allowed' : 'pointer',
                                     fontWeight: '600',
                                     fontSize: '14px',
-                                    transition: 'all 0.3s ease'
+                                    whiteSpace: 'nowrap'
                                 }}
                             >
                                 {isSavingCategory ? '...' : <><FaPlus /> Add</>}
