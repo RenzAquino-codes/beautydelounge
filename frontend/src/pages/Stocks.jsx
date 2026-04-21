@@ -338,36 +338,38 @@ function Stocks() {
             </main>
 
             {/* Manage Categories Modal (admin only) */}
+           {/* Manage Categories Modal (admin only) */}
             {showCategoryModal && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '420px' }}>
-                        <h3 style={{ marginBottom: '16px' }}>Manage Service Categories</h3>
+                        <h3 style={{ marginBottom: '16px' }}>Manage Stock Categories</h3>
 
                         {/* Add new category */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'stretch' }}>
                             <input
                                 placeholder="New category name..."
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
                                 style={{
-                                    flex: 1,
-                                    padding: '14px 16px',
+                                    flex: '1 1 auto', /* Forces input to take up space */
+                                    width: '100%',
+                                    padding: '12px 14px',
                                     border: '2px solid #c9a84c',
                                     borderRadius: '8px',
                                     fontSize: '15px',
                                     color: '#3a3020',
                                     background: '#fffaf5',
                                     outline: 'none',
-                                    transition: 'all 0.3s ease',
-                                    fontWeight: '500'
                                 }}
                             />
                             <button
                                 onClick={handleAddCategory}
                                 disabled={isSavingCategory}
                                 style={{
-                                    padding: '12px 16px',
+                                    flex: '0 0 auto', /* Prevents button from stretching */
+                                    whiteSpace: 'nowrap',
+                                    padding: '0 20px',
                                     borderRadius: '8px',
                                     border: 'none',
                                     background: '#c9a84c',
@@ -375,7 +377,6 @@ function Stocks() {
                                     cursor: isSavingCategory ? 'not-allowed' : 'pointer',
                                     fontWeight: '600',
                                     fontSize: '14px',
-                                    transition: 'all 0.3s ease'
                                 }}
                             >
                                 {isSavingCategory ? '...' : <><FaPlus /> Add</>}
@@ -383,7 +384,7 @@ function Stocks() {
                         </div>
 
                         {/* Category list */}
-                        <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                        <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
                             {categories.length === 0 ? (
                                 <p style={{ color: '#8c7a60', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
                                     No categories yet. Add one above.
@@ -392,14 +393,14 @@ function Stocks() {
                                 categories.map(cat => (
                                     <div key={cat._id} style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        padding: '10px 12px', borderRadius: '8px', marginBottom: '6px',
-                                        background: '#faf8f5', border: '1px solid #e8e0d4'
+                                        padding: '12px 16px', borderRadius: '8px', marginBottom: '8px',
+                                        background: 'rgba(201, 168, 76, 0.05)', border: '1px solid rgba(201, 168, 76, 0.2)'
                                     }}>
-                                        <span style={{ color: '#3a3020', fontSize: '14px' }}>{cat.name}</span>
+                                        <span style={{ color: '#3a3020', fontSize: '14px', fontWeight: '500' }}>{cat.name}</span>
                                         <button
                                             className="icon-btn delete"
                                             onClick={() => setConfirmDeleteCategory(cat._id)}
-                                            style={{ marginLeft: '8px' }}
+                                            style={{ margin: 0 }}
                                         >
                                             <FaTrash />
                                         </button>
@@ -408,7 +409,7 @@ function Stocks() {
                             )}
                         </div>
 
-                        <div className="modal-actions" style={{ marginTop: '16px' }}>
+                        <div className="modal-actions" style={{ marginTop: '20px' }}>
                             <button className="cancel-btn" onClick={() => setShowCategoryModal(false)}>Close</button>
                         </div>
                     </div>
