@@ -11,8 +11,6 @@ const multer = require('multer');
 const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE;
 const STAFF_SECRET_CODE = process.env.STAFF_SECRET_CODE;
 const crypto = require('crypto');
-// const sgMail = require('@sendgrid/mail');
-// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -31,12 +29,11 @@ app.use(cors({
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-const mongoSanitize = require('express-mongo-sanitize');
+
 const helmet = require('helmet');
 
 app.use(helmet()); 
 app.use(express.json());
-app.use(mongoSanitize()); 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
