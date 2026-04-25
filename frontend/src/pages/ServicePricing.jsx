@@ -7,7 +7,7 @@ const API = "https://beautydelounge-backend.onrender.com";
 
 function ServicePricing() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("staff"));
+    
     let isAdmin = false;
     try {
         const token = localStorage.getItem("token");
