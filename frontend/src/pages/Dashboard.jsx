@@ -119,6 +119,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBoxes, FaTags, FaHistory, FaChartPie, FaUser, FaExclamationTriangle, FaUsers, FaHome } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
+import { jwtDecode } from "jwt-decode";
 import "./Dashboard.css";
 
 function Dashboard() {
@@ -129,6 +130,16 @@ function Dashboard() {
     const [transactions, setTransactions] = useState([]);
     const [loadingStats, setLoadingStats] = useState(true);
 
+    let isAdmin = false;
+    try {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const decoded = jwtDecode(token);
+            isAdmin = decoded.role === 'admin' || decoded.role === 'static-admin';
+        }
+    } catch (e) {
+        console.error("Invalid token");
+    }
     // Fetch Low Stock
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -210,7 +221,7 @@ function Dashboard() {
     ];
 
     const modules = allModules.filter(module => {
-        if (module.adminOnly) return user?.role === 'admin' || user?.role === 'static-admin';
+        if (module.adminOnly) return isAdmin; 
         return true;
     });
 

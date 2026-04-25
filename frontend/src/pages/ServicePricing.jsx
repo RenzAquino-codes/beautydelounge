@@ -8,7 +8,14 @@ const API = "https://beautydelounge-backend.onrender.com";
 function ServicePricing() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
-    const isAdmin = user?.role === 'admin' || user?.role === 'static-admin';
+    let isAdmin = false;
+    try {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const decoded = jwtDecode(token);
+            isAdmin = decoded.role === 'admin' || decoded.role === 'static-admin';
+        }
+    } catch (e) {}
 
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);

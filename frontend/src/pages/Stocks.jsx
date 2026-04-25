@@ -463,14 +463,21 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
-
+import { jwtDecode } from "jwt-decode";
 const API = "https://beautydelounge-backend.onrender.com";
 
 function Stocks() {
     const navigate = useNavigate();
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem("user"));
-    const isAdmin = user?.role === 'admin' || user?.role === 'static-admin';
+    let isAdmin = false;
+    try {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const decoded = jwtDecode(token);
+            isAdmin = decoded.role === 'admin' || decoded.role === 'static-admin';
+        }
+    } catch (e) {}
 
     const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const [showForm, setShowForm] = useState(false);
