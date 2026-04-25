@@ -11,15 +11,29 @@ import ManageUsers from './pages/ManageUsers';
 
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 function AdminRoute({ children }) {
-    const user = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
     if (!token) return <Navigate to="/" />;
-    if (user?.role !== 'admin' && user?.role !== 'static-admin') return <Navigate to="/dashboard" />;
+
+    try {
+        // Decode the token to see what the SERVER says the role is
+        const decodedToken = jwtDecode(token);
+        
+        // If the token expires or they aren't an admin, kick them out
+        if (decodedToken.exp * 1000 < Date.now() || 
+           (decodedToken.role !== 'admin' && decodedToken.role !== 'static-admin')) {
+            return <Navigate to="/dashboard" />;
+        }
+    } catch (error) {
+        // If the token is fake or tampered with, kick them out
+        localStorage.clear();
+        return <Navigate to="/" />;
+    }
+
     return children;
 }
-
 function App() {
     return (
         <Router>

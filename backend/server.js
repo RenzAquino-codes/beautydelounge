@@ -563,7 +563,7 @@ app.put("/api/users/:id", verifyToken, async (req, res) => {
 
 
 // GET all users (admin only)
-app.get("/api/users", verifyToken, async (req, res) => {
+app.get("/api/users", verifyToken, verifyAdmin, async (req, res) => {
     try {
         const users = await User.find({}, { password: 0 });
         res.json(users);
@@ -573,7 +573,7 @@ app.get("/api/users", verifyToken, async (req, res) => {
 });
 
 // DELETE user (admin only)
-app.delete("/api/users/:id", verifyToken, async (req, res) => {
+app.delete("/api/users/:id", verifyToken, verifyAdmin, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
         res.json({ message: "User deleted successfully" });
@@ -583,7 +583,7 @@ app.delete("/api/users/:id", verifyToken, async (req, res) => {
 });
 
 // POST create user by admin (skips access code, uses role directly)
-app.post("/api/admin/create-user", verifyToken, async (req, res) => {
+app.post("/api/admin/create-user", verifyToken, verifyAdmin, async (req, res) => {
     try {
         const { firstName, middleName, lastName, email, password, role } = req.body;
 
