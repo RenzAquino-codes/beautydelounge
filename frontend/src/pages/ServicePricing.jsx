@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTags } from "react-icons/fa";
-
+import { jwtDecode } from "jwt-decode";
 const API = "https://beautydelounge-backend.onrender.com";
 
 function ServicePricing() {
