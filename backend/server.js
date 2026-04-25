@@ -35,8 +35,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 
 app.use(helmet()); 
-app.use(mongoSanitize()); 
 app.use(express.json());
+app.use(mongoSanitize()); 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
