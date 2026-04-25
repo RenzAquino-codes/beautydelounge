@@ -31,6 +31,11 @@ app.use(cors({
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+
+app.use(helmet()); 
+app.use(mongoSanitize()); 
 app.use(express.json());
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
