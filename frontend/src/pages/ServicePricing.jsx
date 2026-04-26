@@ -7,7 +7,7 @@ const API = "https://beautydelounge-backend.onrender.com";
 
 function ServicePricing() {
     const navigate = useNavigate();
-    
+
     let isAdmin = false;
     try {
         const token = localStorage.getItem("token");
@@ -15,7 +15,7 @@ function ServicePricing() {
             const decoded = jwtDecode(token);
             isAdmin = decoded.role === 'admin' || decoded.role === 'static-admin';
         }
-    } catch (e) {}
+    } catch (e) { }
 
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
@@ -291,9 +291,12 @@ function ServicePricing() {
                             <input
                                 placeholder="Price (₱)"
                                 type="number"
+                                min="1"
                                 value={form.price}
                                 onChange={e => setForm({ ...form, price: e.target.value })}
+                                onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                             />
+                            
                             <div className="image-upload-box" onClick={() => document.getElementById('serviceImageInput').click()}>
                                 {imagePreview
                                     ? <img src={imagePreview} alt="preview" className="image-preview" />

@@ -230,9 +230,15 @@ app.post("/api/login", async (req, res) => {
 
         // 3. Create a JWT for the verified user
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            { 
+                id: user._id, 
+                role: user.role, 
+                firstName: user.firstName,
+                lastName: user.lastName,   
+                email: user.email          
+            },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '1d' } // Token expires in 1 day
+            { expiresIn: '1d' }
         );
 
         // Remove the password from the object before sending it to the frontend

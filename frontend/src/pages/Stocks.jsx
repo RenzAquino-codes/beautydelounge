@@ -8,7 +8,7 @@ const API = "https://beautydelounge-backend.onrender.com";
 function Stocks() {
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     let isAdmin = false;
     try {
         const token = localStorage.getItem("token");
@@ -16,7 +16,7 @@ function Stocks() {
             const decoded = jwtDecode(token);
             isAdmin = decoded.role === 'admin' || decoded.role === 'static-admin';
         }
-    } catch (e) {}
+    } catch (e) { }
 
     const [showLowStockOnly, setShowLowStockOnly] = useState(location.state?.filterLowStock || false);
     const [showForm, setShowForm] = useState(false);
@@ -310,8 +310,10 @@ function Stocks() {
                                 <input
                                     placeholder="Quantity"
                                     type="number"
+                                    min="1"
                                     value={form.quantity}
                                     onChange={e => setForm({ ...form, quantity: e.target.value })}
+                                    onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                                     style={{ flex: 1 }}
                                 />
                                 <select

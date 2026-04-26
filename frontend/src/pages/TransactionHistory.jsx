@@ -243,8 +243,10 @@ function TransactionHistory() {
                             <input
                                 placeholder="Amount (₱)"
                                 type="number"
+                                min="1"
                                 value={form.amount}
                                 onChange={e => setForm({ ...form, amount: e.target.value })}
+                                onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                             />
 
                             <input

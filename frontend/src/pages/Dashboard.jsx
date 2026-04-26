@@ -7,22 +7,22 @@ import "./Dashboard.css";
 
 function Dashboard() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user"));
-    const [dateTime, setDateTime] = useState(new Date());
-    const [lowStockCount, setLowStockCount] = useState(0);
-    const [transactions, setTransactions] = useState([]);
-    const [loadingStats, setLoadingStats] = useState(true);
-
+    let user = null;
     let isAdmin = false;
     try {
         const token = localStorage.getItem("token");
         if (token) {
-            const decoded = jwtDecode(token);
-            isAdmin = decoded.role === 'admin' || decoded.role === 'static-admin';
+            user = jwtDecode(token); // Unlocks the token to get your name and role!
+            isAdmin = user.role === 'admin' || user.role === 'static-admin';
         }
     } catch (e) {
         console.error("Invalid token");
     }
+    const [dateTime, setDateTime] = useState(new Date());
+    const [lowStockCount, setLowStockCount] = useState(0);
+    const [transactions, setTransactions] = useState([]);
+    const [loadingStats, setLoadingStats] = useState(true);
+    
     // Fetch Low Stock
     useEffect(() => {
         const token = localStorage.getItem("token");
