@@ -74,6 +74,7 @@ function TransactionHistory() {
             return showToast("Please fill in all fields.");
         if (!isValidName(form.client))
             return showToast("Client name must contain letters only.");
+        if (Number(form.amount) <= 0) return showToast("Amount must be greater than zero.");
         setIsSaving(true);
         try {
             const token = localStorage.getItem("token");

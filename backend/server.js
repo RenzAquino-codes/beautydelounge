@@ -80,23 +80,25 @@ const userSchema = new mongoose.Schema({
 const stockSchema = new mongoose.Schema({
     name: { type: String, required: true },
     category: { type: String },
-    quantity: { type: Number, required: true },
+
+    quantity: { type: Number, required: true, min: [0.01, "Quantity must be greater than zero"] },
     unit: { type: String },
     imageUrl: { type: String }
-
 });
 
 const serviceSchema = new mongoose.Schema({
     name: { type: String, required: true },
     category: { type: String },
-    price: { type: Number, required: true },
+  
+    price: { type: Number, required: true, min: [1.00, "Price must be greater than zero"] },
     imageUrl: { type: String }
 });
 
 const transactionSchema = new mongoose.Schema({
     client: { type: String, required: true },
     service: { type: mongoose.Schema.Types.Mixed, required: true },
-    amount: { type: Number, required: true },
+ 
+    amount: { type: Number, required: true, min: [1.00, "Amount must be greater than zero"] },
     date: { type: String },
     time: { type: String },
     status: { type: String, default: "Paid" }

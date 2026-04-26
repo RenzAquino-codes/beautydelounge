@@ -107,6 +107,7 @@ function ServicePricing() {
 
     const handleSave = async () => {
         if (!form.name || !form.price) return showToast("Please fill in all fields.");
+        if (Number(form.price) <= 0) return showToast("Price must be greater than zero.");
         setIsSaving(true);
         try {
             const imageUrl = await uploadImage();
