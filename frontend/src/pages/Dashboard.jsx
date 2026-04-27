@@ -105,6 +105,7 @@ function Dashboard() {
         { title: "Transactions", path: "/dashboard/transactions", icon: <FaHistory /> },
         { title: "Analytics", path: "/dashboard/analytics", icon: <FaChartPie />, adminOnly: true },
         { title: "Manage Users", path: "/dashboard/manage-users", icon: <FaUsers />, adminOnly: true },
+        { title: "Audit Logs", path: "/dashboard/audit-logs", icon: <FaShieldAlt />, adminOnly: true },
     ];
 
     const modules = allModules.filter(module => {

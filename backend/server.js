@@ -117,6 +117,17 @@ categorySchema.index({ name: 1, type: 1 }, { unique: true });
 const Category = mongoose.model("Category", categorySchema);
 
 // =====================
+// AUDIT LOG SCHEMA
+// =====================
+const auditLogSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    role: { type: String, required: true },
+    action: { type: String, required: true },
+    details: { type: String },
+    timestamp: { type: Date, default: Date.now }
+});
+const AuditLog = mongoose.model("AuditLog", auditLogSchema);
+// =====================
 // TEMPORARY DATA SCHEMAS (TTL)
 // =====================
 
@@ -175,6 +186,27 @@ const verifyAdmin = (req, res, next) => {
         return res.status(403).json({ error: "Admin access required." });
     }
     next();
+};
+
+// =====================
+// AUDIT LOGGER UTILITY
+// =====================
+const logAction = async (req, action, details = "") => {
+    try {
+        // req.user exists because of your verifyToken middleware!
+        const userName = req.user ? `${req.user.firstName || 'Unknown'} ${req.user.lastName || 'User'}` : 'System';
+        const role = req.user ? req.user.role : 'system';
+        
+        const log = new AuditLog({
+            userName: userName.trim(),
+            role,
+            action,
+            details
+        });
+        await log.save();
+    } catch (err) {
+        console.error("Failed to save audit log:", err);
+    }
 };
 
 // =====================
@@ -448,7 +480,13 @@ app.put("/api/stocks/:id", verifyToken, async (req, res) => {
 
 app.delete("/api/stocks/:id", verifyToken, async (req, res) => {
     try {
-        await Stock.findByIdAndDelete(req.params.id);
+        const deletedStock = await Stock.findByIdAndDelete(req.params.id);
+        
+        // ADD THIS LINE:
+        if (deletedStock) {
+            await logAction(req, "Deleted Stock", `Removed item: ${deletedStock.name}`);
+        }
+        
         res.json({ message: "Deleted successfully" });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
@@ -699,6 +737,20 @@ app.post("/api/reset-password", async (req, res) => {
     } catch (err) {
         console.error("RESET PASSWORD ERROR:", err);
         res.status(500).json({ error: err.message });
+    }
+});
+
+// =====================
+// AUDIT LOG ROUTES
+// =====================
+// Only Admins should be able to view the audit logs
+app.get("/api/audit-logs", verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        // Fetch logs and sort by newest first, limit to the last 100 to save bandwidth
+        const logs = await AuditLog.find().sort({ timestamp: -1 }).limit(100);
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
     }
 });
 

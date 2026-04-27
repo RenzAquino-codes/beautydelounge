@@ -7,6 +7,7 @@ import TransactionHistory from './pages/TransactionHistory.jsx';
 import Analytics from './pages/Analytics.jsx';
 import Profile from './pages/Profile.jsx';
 import ManageUsers from './pages/ManageUsers';
+import AuditLogs from "./pages/AuditLogs";
 
 
 
@@ -46,7 +47,7 @@ function App() {
 
                 {/*Dashboard page*/}
                 <Route path="/dashboard" element={<Dashboard />} />
-
+                <Route path="/dashboard/audit-logs" element={<AuditLogs />} />
                 <Route path="/dashboard/stocks" element={<Stocks />} />
                 <Route path="/dashboard/service-pricing" element={<ServicePricing />} />
                 <Route path="/dashboard/transactions" element={<TransactionHistory />} />
