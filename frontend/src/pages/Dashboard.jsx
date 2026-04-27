@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBoxes, FaTags, FaHistory, FaChartPie, FaUser, FaExclamationTriangle, FaUsers, FaHome } from "react-icons/fa";
+import { FaBoxes, FaTags, FaHistory, FaChartPie, FaUser, FaExclamationTriangle, FaUsers, FaHome, FaShieldAlt } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import { jwtDecode } from "jwt-decode";
 import "./Dashboard.css";
