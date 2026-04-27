@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import {
-    PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-    LineChart, Line, XAxis, YAxis, CartesianGrid,
+    PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
     BarChart, Bar
 } from "recharts";
 
-const COLORS = ['#c9a84c', '#e8d5a3', '#a07830', '#f0e0b0', '#7a5c28', '#d4b870', '#8c6820'];
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -86,13 +84,7 @@ function Analytics() {
         .sort((a, b) => a.earnings - b.earnings); 
 
     // 3. Monthly Earnings
-    const monthlyEarnings = transactions.reduce((acc, t) => {
-        if (!t.date || t.status !== 'Paid') return acc;
-        const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });
-        acc[month] = (acc[month] || 0) + Number(t.amount);
-        return acc;
-    }, {});
-    const monthlyData = Object.entries(monthlyEarnings).map(([name, earnings]) => ({ name, earnings }));
+
 
     // 4. Paid vs Pending
     const statusCount = transactions.reduce((acc, t) => {

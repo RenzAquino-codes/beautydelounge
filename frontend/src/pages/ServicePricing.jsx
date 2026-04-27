@@ -509,11 +509,7 @@ function ServicePricing() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
 
-    const [categories, setCategories] = useState([]);
-    const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [isSavingCategory, setIsSavingCategory] = useState(false);
-    const [confirmDeleteCategory, setConfirmDeleteCategory] = useState(null);
+ 
 
     const token = () => localStorage.getItem("token");
 
@@ -534,6 +530,7 @@ function ServicePricing() {
             .then(res => res.json())
             .then(data => setServices(data));
         fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleImageChange = (e) => {
@@ -663,11 +660,7 @@ function ServicePricing() {
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
                     <button className="add-btn" style={{ marginBottom: 0 }} onClick={openAdd}><FaPlus /> Add Service</button>
-                    {isAdmin && (
-                        <button className="add-btn" style={{ background: '#8c7a60', marginBottom: 0 }} onClick={() => setShowCategoryModal(true)}>
-                            <FaTags /> Manage Categories
-                        </button>
-                    )}
+                    
                 </div>
 
                 {/* BULK ACTION BAR */}

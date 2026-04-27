@@ -550,8 +550,6 @@ function Stocks() {
     const [selectedCategory, setSelectedCategory] = useState("All");
 
     const [categories, setCategories] = useState([]);
-    const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState("");
 
     const token = () => localStorage.getItem("token");
 
@@ -696,11 +694,7 @@ function Stocks() {
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px' }}>
                     <button className="add-btn" style={{ marginBottom: 0 }} onClick={openAdd}><FaPlus /> Add Item</button>
-                    {isAdmin && (
-                        <button className="add-btn" style={{ background: '#8c7a60', marginBottom: 0 }} onClick={() => setShowCategoryModal(true)}>
-                            <FaTags /> Manage Categories
-                        </button>
-                    )}
+                    
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', cursor: 'pointer', fontSize: '14px', color: '#6b5c45', fontWeight: 500 }}>
                         <input type="checkbox" checked={showLowStockOnly} onChange={(e) => setShowLowStockOnly(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
                         Show low stock only
