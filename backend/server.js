@@ -472,6 +472,12 @@ app.post("/api/stocks", verifyToken, async (req, res) => {
 app.put("/api/stocks/:id", verifyToken, async (req, res) => {
     try {
         const stock = await Stock.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        
+        // ADDED AUDIT LOG
+        if (stock) {
+            await logAction(req, "Updated Stock", `Edited item: ${stock.name}`);
+        }
+        
         res.json(stock);
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -517,6 +523,12 @@ app.post("/api/services", verifyToken, async (req, res) => {
 app.put("/api/services/:id", verifyToken, async (req, res) => {
     try {
         const service = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        
+        // ADDED AUDIT LOG
+        if (service) {
+            await logAction(req, "Updated Service", `Edited service pricing: ${service.name}`);
+        }
+        
         res.json(service);
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -562,6 +574,10 @@ app.put("/api/transactions/:id", verifyToken, async (req, res) => {
             { new: true } 
         );
         if (!transaction) return res.status(404).json({ error: "Transaction not found" });
+        
+        // ADDED AUDIT LOG
+        await logAction(req, "Updated Transaction", `Edited transaction for client: ${transaction.client}`);
+        
         res.json(transaction);
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -603,6 +619,10 @@ app.put("/api/users/:id", verifyToken, async (req, res) => {
         }
         const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
         const { password: pwd, ...userData } = user.toObject();
+        
+        // ADDED AUDIT LOG
+        await logAction(req, "Updated Profile", `Updated account details for: ${firstName} ${lastName}`);
+        
         res.json({ message: "Profile updated!", user: userData });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
