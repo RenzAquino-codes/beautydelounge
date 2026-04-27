@@ -498,10 +498,10 @@ function ServicePricing() {
     const [priceError, setPriceError] = useState(""); 
     const [services, setServices] = useState([]);
     
-    // Bulk Delete State
     const [selectedItems, setSelectedItems] = useState([]);
+    // NEW: Custom Bulk Delete Modal State
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-    // Category Management State
     const [categories, setCategories] = useState([]);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState("");
@@ -640,8 +640,8 @@ function ServicePricing() {
         else setSelectedItems(filteredServices.map(item => item._id));
     };
 
-    const handleBulkDelete = async () => {
-        if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} services?`)) return;
+    // UPGRADED: Executes the delete from the Custom Modal
+    const executeBulkDelete = async () => {
         setIsSaving(true);
         try {
             await Promise.all(selectedItems.map(id => 
@@ -649,7 +649,8 @@ function ServicePricing() {
             ));
             setServices(services.filter(s => !selectedItems.includes(s._id)));
             setSelectedItems([]);
-            showToast(`Deleted ${selectedItems.length} services.`, "success");
+            setShowBulkDeleteModal(false); // Close Modal
+            showToast(`Deleted services successfully.`, "success");
         } catch(e) {
             showToast("Failed to delete some services.");
         }
@@ -708,11 +709,10 @@ function ServicePricing() {
                 {selectedItems.length > 0 && (
                     <div className="bulk-action-bar">
                         <span style={{ color: '#c53030', fontWeight: 600 }}>{selectedItems.length} selected</span>
-                        <button className="view-btn" onClick={handleBulkDelete}><FaTrash style={{ marginRight: '6px' }}/> Delete Selected</button>
+                        <button className="view-btn" onClick={() => setShowBulkDeleteModal(true)}><FaTrash style={{ marginRight: '6px' }}/> Delete Selected</button>
                     </div>
                 )}
 
-                {/* UPGRADED: Visually prominent Select All Checkbox */}
                 <div style={{ marginBottom: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#6b5c45', fontSize: '14px', fontWeight: 500 }} onClick={toggleSelectAll}>
                     {selectedItems.length === filteredServices.length && filteredServices.length > 0 
                         ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '20px' }}/> 
@@ -816,12 +816,26 @@ function ServicePricing() {
                     </div>
                 )}
 
+                {/* NEW: Custom Confirm Delete Bulk Modal */}
+                {showBulkDeleteModal && (
+                    <div className="modal-overlay">
+                        <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
+                            <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', margin: '0 auto 12px' }} />
+                            <h3 style={{ marginBottom: '8px' }}>Delete {selectedItems.length} {selectedItems.length === 1 ? 'Service' : 'Services'}?</h3>
+                            <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>This action cannot be undone.</p>
+                            <div className="modal-actions">
+                                <button onClick={executeBulkDelete} style={{ background: '#e74c3c' }}>Yes, Delete</button>
+                                <button className="cancel-btn" onClick={() => setShowBulkDeleteModal(false)}>Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="stocks-grid">
                     {filteredServices.length > 0 ? (
                         filteredServices.map(item => (
                             <div key={item._id} className={`stock-card ${selectedItems.includes(item._id) ? 'selected-card' : ''}`} style={{ position: 'relative' }}>
                                 
-                                {/* UPGRADED: High-Visibility Card Checkbox using Drop Shadows */}
                                 <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, cursor: 'pointer' }} onClick={() => toggleSelect(item._id)}>
                                     {selectedItems.includes(item._id) 
                                         ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '22px', background: 'white', borderRadius: '4px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}/> 

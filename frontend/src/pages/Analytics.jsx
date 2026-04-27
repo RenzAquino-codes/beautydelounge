@@ -4,12 +4,12 @@ import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar } from "react-icons/f
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import {
     PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
-    BarChart, Bar, LabelList // ADDED LabelList for detailed numbers
+    BarChart, Bar, LabelList, LineChart, Line // Restored LineChart imports
 } from "recharts";
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-        const title = label || payload[0].payload.name;
+        const title = label || payload[0].payload.name || payload[0].name;
         const value = payload[0].value;
         const isMoney = payload[0].dataKey === 'earnings';
 
@@ -102,6 +102,18 @@ function Analytics() {
     }, {});
     const statusData = Object.entries(statusCount).map(([name, value]) => ({ name, value }));
 
+    // RESTORED: 4. Monthly Earnings
+    const monthlyEarnings = transactions.reduce((acc, t) => {
+        if (!t.date || t.status !== 'Paid') return acc;
+        const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+        acc[month] = (acc[month] || 0) + Number(t.amount);
+        return acc;
+    }, {});
+    // Sort chronologically
+    const monthlyData = Object.entries(monthlyEarnings)
+        .map(([name, earnings]) => ({ name, earnings }))
+        .sort((a, b) => new Date(a.name) - new Date(b.name));
+
     const totalEarned = transactions.filter(t => t.status === 'Paid').reduce((sum, t) => sum + Number(t.amount), 0);
     const topService = serviceData[serviceData.length - 1]?.name || 'N/A';
 
@@ -142,10 +154,23 @@ function Analytics() {
 
                         <div className="analytics-grid">
                             
+                            {/* RESTORED: Monthly Earnings Line Chart */}
+                            <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+                                <h3 className="chart-title">Monthly Revenue</h3>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0e0b0" />
+                                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b5c45' }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fontSize: 12, fill: '#6b5c45' }} axisLine={false} tickLine={false} tickFormatter={(val) => `₱${val.toLocaleString()}`} />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Line type="monotone" dataKey="earnings" stroke="#c9a84c" strokeWidth={3} dot={{ r: 5, fill: '#c9a84c' }} activeDot={{ r: 8 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+
                             {/* DETAILED: Dynamic Height + Labels on Bars */}
                             <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                                 <h3 className="chart-title">Most Availed Services</h3>
-                                {/* The height mathematically grows based on how many services you have! */}
                                 <ResponsiveContainer width="100%" height={Math.max(300, serviceData.length * 45)}>
                                     <BarChart data={serviceData} layout="vertical" margin={{ top: 5, right: 40, left: 200, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0e0b0" />
