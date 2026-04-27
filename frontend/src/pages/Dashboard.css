@@ -1154,8 +1154,25 @@
         flex-direction: column;
         align-items: stretch;
     }
+    
+    /* NEW: Ensure the header stacks properly so the search bar fits */
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    /* NEW: Prevent Recharts from overflowing horizontally on mobile */
+    .analytics-grid {
+        grid-template-columns: 1fr; /* Stack charts completely */
+    }
+    
+    /* NEW: Crucial rule for flex/grid layouts so SVGs shrink */
+    .chart-card {
+        min-width: 0;
+        padding: 15px 10px; /* Smaller padding on phones */
+    }
 }
-
 /* Extra small phones */
 @media (max-width: 400px) {
     .module-grid {
