@@ -4,7 +4,7 @@ import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar } from "react-icons/f
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import {
     PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
-    BarChart, Bar, LabelList, LineChart, Line // Restored LineChart imports
+    BarChart, Bar, LabelList, LineChart, Line 
 } from "recharts";
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -102,14 +102,13 @@ function Analytics() {
     }, {});
     const statusData = Object.entries(statusCount).map(([name, value]) => ({ name, value }));
 
-    // RESTORED: 4. Monthly Earnings
+    // 4. Monthly Earnings
     const monthlyEarnings = transactions.reduce((acc, t) => {
         if (!t.date || t.status !== 'Paid') return acc;
         const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });
         acc[month] = (acc[month] || 0) + Number(t.amount);
         return acc;
     }, {});
-    // Sort chronologically
     const monthlyData = Object.entries(monthlyEarnings)
         .map(([name, earnings]) => ({ name, earnings }))
         .sort((a, b) => new Date(a.name) - new Date(b.name));
@@ -154,7 +153,7 @@ function Analytics() {
 
                         <div className="analytics-grid">
                             
-                            {/* RESTORED: Monthly Earnings Line Chart */}
+                            {/* Monthly Earnings Line Chart */}
                             <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                                 <h3 className="chart-title">Monthly Revenue</h3>
                                 <ResponsiveContainer width="100%" height={300}>
@@ -168,7 +167,7 @@ function Analytics() {
                                 </ResponsiveContainer>
                             </div>
 
-                            {/* DETAILED: Dynamic Height + Labels on Bars */}
+                            {/* Most Availed Services */}
                             <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                                 <h3 className="chart-title">Most Availed Services</h3>
                                 <ResponsiveContainer width="100%" height={Math.max(300, serviceData.length * 45)}>
@@ -184,11 +183,12 @@ function Analytics() {
                                 </ResponsiveContainer>
                             </div>
 
-                            {/* DETAILED: Dynamic Height + Earnings Labels */}
-                            <div className="chart-card">
+                            {/* FIX: Set gridColumn to '1 / -1' so the bars have room to stretch! */}
+                            <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                                 <h3 className="chart-title">Earnings By Service</h3>
                                 <ResponsiveContainer width="100%" height={Math.max(300, earningsData.length * 45)}>
-                                    <BarChart data={earningsData} layout="vertical" margin={{ top: 5, right: 70, left: 200, bottom: 5 }}>
+                                    {/* FIX: Increased right margin to 90 so large ₱ amounts don't get cut off on the right */}
+                                    <BarChart data={earningsData} layout="vertical" margin={{ top: 5, right: 90, left: 200, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0e0b0" />
                                         <XAxis type="number" hide />
                                         <YAxis type="category" dataKey="name" width={190} tick={<CustomYAxisTick />} axisLine={false} tickLine={false} />
@@ -200,16 +200,17 @@ function Analytics() {
                                 </ResponsiveContainer>
                             </div>
 
-                            {/* DETAILED: Inline Percentages on Donut Chart */}
+                            {/* Payment Status Pie Chart */}
                             <div className="chart-card">
                                 <h3 className="chart-title">Payment Status</h3>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <PieChart>
+                                        {/* FIX: Shrunk the inner/outer radius so text fits, and changed label to % only */}
                                         <Pie 
                                             data={statusData} cx="50%" cy="50%" 
-                                            innerRadius={80} outerRadius={110} 
+                                            innerRadius={70} outerRadius={100} 
                                             paddingAngle={4} dataKey="value" stroke="none"
-                                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                                             labelLine={false}
                                         >
                                             {statusData.map((entry, index) => (
