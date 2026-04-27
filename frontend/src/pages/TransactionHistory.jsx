@@ -143,6 +143,12 @@ function TransactionHistory() {
         (Array.isArray(t.service) ? t.service.join(" ") : t.service).toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+        if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+        if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+        return 0; // If they have the same status, keep them in their newest-first order
+    });
+
     return (
         <div className="dashboard-container">
             {isSaving && (
@@ -296,8 +302,8 @@ function TransactionHistory() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredTransactions.length > 0 ? (
-                            filteredTransactions.map(t => (
+                        {sortedTransactions.length > 0 ? (
+                            sortedTransactions.map(t => (
                                 <tr key={t._id}>
                                     <td>{t.client}</td>
                                     <td>{Array.isArray(t.service) ? t.service.join(", ") : t.service}</td>

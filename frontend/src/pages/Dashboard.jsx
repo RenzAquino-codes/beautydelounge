@@ -71,7 +71,11 @@ function Dashboard() {
     };
 
     // --- DATA CALCULATIONS ---
-    const todayStr = new Date().toISOString().split('T')[0]; // Gets YYYY-MM-DD
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
     
     const todaysEarnings = transactions
         .filter(t => t.status === 'Paid' && t.date === todayStr)
