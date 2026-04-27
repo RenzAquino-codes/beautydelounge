@@ -2,10 +2,17 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
+import { jwtDecode } from "jwt-decode";
 
 function Profile() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user"));
+    let user = null;
+    try {
+        const token = localStorage.getItem("token");
+        if (token) user = jwtDecode(token);
+    } catch (e) {
+        console.error("Invalid token");
+    }
     const [form, setForm] = useState({
         firstName: user?.firstName || '',
         middleName: user?.middleName || '',
@@ -57,7 +64,6 @@ function Profile() {
             const data = await res.json();
             
             if (res.ok) {
-                localStorage.setItem("user", JSON.stringify({ ...user, ...body }));
                 showToast("Profile updated successfully!", "success");
             } else {
                 showToast(data.error);
