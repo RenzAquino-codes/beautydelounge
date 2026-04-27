@@ -495,21 +495,25 @@ function ServicePricing() {
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [form, setForm] = useState({ name: "", category: "", price: "" });
-    const [priceError, setPriceError] = useState(""); // NEW: Validation State
+    const [priceError, setPriceError] = useState(""); 
     const [services, setServices] = useState([]);
     
-    // NEW: Bulk Delete State
+    // Bulk Delete State
     const [selectedItems, setSelectedItems] = useState([]);
 
+    // Category Management State
+    const [categories, setCategories] = useState([]);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [isSavingCategory, setIsSavingCategory] = useState(false);
+    const [confirmDeleteCategory, setConfirmDeleteCategory] = useState(null);
+
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
-    const [confirmDelete, setConfirmDelete] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
-
- 
 
     const token = () => localStorage.getItem("token");
 
@@ -518,19 +522,14 @@ function ServicePricing() {
         setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
     };
 
-    const fetchCategories = () => {
-        fetch(`${API}/api/categories?type=service`, { headers: { "Authorization": `Bearer ${token()}` }})
-            .then(res => res.json())
-            .then(data => setCategories(Array.isArray(data) ? data : []))
-            .catch(err => console.error(err));
-    };
-
     useEffect(() => {
         fetch(`${API}/api/services`, { headers: { "Authorization": `Bearer ${token()}` }})
             .then(res => res.json())
             .then(data => setServices(data));
-        fetchCategories();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+            
+        fetch(`${API}/api/categories?type=service`, { headers: { "Authorization": `Bearer ${token()}` }})
+            .then(res => res.json())
+            .then(data => setCategories(Array.isArray(data) ? data : []));
     }, []);
 
     const handleImageChange = (e) => {
@@ -591,6 +590,44 @@ function ServicePricing() {
         setImagePreview(item.imageUrl || '');
         setImageFile(null);
         setShowForm(true);
+    };
+
+    // --- CATEGORY MANAGEMENT LOGIC ---
+    const handleAddCategory = async () => {
+        const name = newCategoryName.trim();
+        if (!name) return showToast("Please enter a category name.");
+        setIsSavingCategory(true);
+        try {
+            const res = await fetch(`${API}/api/categories`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                body: JSON.stringify({ name, type: "service" })
+            });
+            const data = await res.json();
+            if (!res.ok) return showToast(data.error || "Failed to add category.");
+            setCategories([...categories, data]);
+            setNewCategoryName("");
+            showToast("Category added.", "success");
+        } catch (err) {
+            showToast("Failed to add category.");
+        } finally {
+            setIsSavingCategory(false);
+        }
+    };
+
+    const handleDeleteCategory = async (id) => {
+        try {
+            await fetch(`${API}/api/categories/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token()}` }
+            });
+            setCategories(categories.filter(c => c._id !== id));
+            showToast("Category deleted.", "success");
+        } catch (err) {
+            showToast("Failed to delete category.");
+        } finally {
+            setConfirmDeleteCategory(null);
+        }
     };
 
     // --- BULK DELETE LOGIC ---
@@ -660,7 +697,11 @@ function ServicePricing() {
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
                     <button className="add-btn" style={{ marginBottom: 0 }} onClick={openAdd}><FaPlus /> Add Service</button>
-                    
+                    {isAdmin && (
+                        <button className="add-btn" style={{ background: '#8c7a60', marginBottom: 0 }} onClick={() => setShowCategoryModal(true)}>
+                            <FaTags /> Manage Categories
+                        </button>
+                    )}
                 </div>
 
                 {/* BULK ACTION BAR */}
@@ -675,6 +716,7 @@ function ServicePricing() {
                     Select All
                 </div>
 
+                {/* Main Service Modal */}
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
@@ -695,7 +737,6 @@ function ServicePricing() {
                                     onChange={e => {
                                         const val = e.target.value;
                                         setForm({ ...form, price: val });
-                                        // INLINE VALIDATION TRIGGER
                                         if (val !== "" && Number(val) < 1) setPriceError("Price must be at least ₱1.");
                                         else setPriceError("");
                                     }}
@@ -718,12 +759,63 @@ function ServicePricing() {
                     </div>
                 )}
 
+                {/* Manage Categories Modal */}
+                {showCategoryModal && (
+                    <div className="modal-overlay">
+                        <div className="modal" style={{ maxWidth: '420px' }}>
+                            <h3 style={{ marginBottom: '16px' }}>Manage Service Categories</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', marginBottom: '20px', alignItems: 'stretch' }}>
+                                <input
+                                    placeholder="New category name..."
+                                    value={newCategoryName}
+                                    onChange={e => setNewCategoryName(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+                                    style={{ width: '100%', padding: '12px 14px', border: '2px solid #c9a84c', borderRadius: '8px', outline: 'none' }}
+                                />
+                                <button onClick={handleAddCategory} disabled={isSavingCategory} style={{ padding: '0 24px', borderRadius: '8px', border: 'none', background: '#c9a84c', color: '#ffffff', cursor: 'pointer', fontWeight: '600' }}>
+                                    {isSavingCategory ? '...' : <><FaPlus /> Add</>}
+                                </button>
+                            </div>
+                            <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                                {categories.length === 0 ? (
+                                    <p style={{ color: '#8c7a60', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>No categories yet. Add one above.</p>
+                                ) : (
+                                    categories.map(cat => (
+                                        <div key={cat._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', marginBottom: '6px', background: '#faf8f5', border: '1px solid #e8e0d4' }}>
+                                            <span style={{ color: '#3a3020', fontSize: '14px' }}>{cat.name}</span>
+                                            <button className="icon-btn delete" onClick={() => setConfirmDeleteCategory(cat._id)} style={{ marginLeft: '8px' }}>
+                                                <FaTrash />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <div className="modal-actions" style={{ marginTop: '16px' }}>
+                                <button className="cancel-btn" onClick={() => setShowCategoryModal(false)}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Confirm Delete Category */}
+                {confirmDeleteCategory && (
+                    <div className="modal-overlay">
+                        <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
+                            <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
+                            <h3 style={{ marginBottom: '8px' }}>Delete Category?</h3>
+                            <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>Existing services with this category will not be affected.</p>
+                            <div className="modal-actions">
+                                <button onClick={() => handleDeleteCategory(confirmDeleteCategory)} style={{ background: '#e74c3c' }}>Yes, Delete</button>
+                                <button className="cancel-btn" onClick={() => setConfirmDeleteCategory(null)}>Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="stocks-grid">
                     {filteredServices.length > 0 ? (
                         filteredServices.map(item => (
                             <div key={item._id} className={`stock-card ${selectedItems.includes(item._id) ? 'selected-card' : ''}`} style={{ position: 'relative' }}>
-                                
-                                {/* CHECKBOX IN TOP LEFT OF CARD */}
                                 <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, cursor: 'pointer' }} onClick={() => toggleSelect(item._id)}>
                                     {selectedItems.includes(item._id) ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '20px', background: 'white', borderRadius: '4px' }}/> : <FaSquare style={{ color: '#ffffff', fontSize: '20px', opacity: 0.8 }}/>}
                                 </div>
