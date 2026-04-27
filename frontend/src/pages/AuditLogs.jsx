@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaShieldAlt } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 
 function AuditLogs() {
