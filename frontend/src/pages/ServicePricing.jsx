@@ -711,8 +711,12 @@ function ServicePricing() {
                         <button className="view-btn" onClick={handleBulkDelete}><FaTrash style={{ marginRight: '6px' }}/> Delete Selected</button>
                     </div>
                 )}
+
+                {/* UPGRADED: Visually prominent Select All Checkbox */}
                 <div style={{ marginBottom: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#6b5c45', fontSize: '14px', fontWeight: 500 }} onClick={toggleSelectAll}>
-                    {selectedItems.length === filteredServices.length && filteredServices.length > 0 ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '18px' }}/> : <FaSquare style={{ color: '#dcd5c9', fontSize: '18px' }}/>}
+                    {selectedItems.length === filteredServices.length && filteredServices.length > 0 
+                        ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '20px' }}/> 
+                        : <FaSquare style={{ color: '#a89f91', fontSize: '20px' }}/>}
                     Select All
                 </div>
 
@@ -816,8 +820,13 @@ function ServicePricing() {
                     {filteredServices.length > 0 ? (
                         filteredServices.map(item => (
                             <div key={item._id} className={`stock-card ${selectedItems.includes(item._id) ? 'selected-card' : ''}`} style={{ position: 'relative' }}>
+                                
+                                {/* UPGRADED: High-Visibility Card Checkbox using Drop Shadows */}
                                 <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, cursor: 'pointer' }} onClick={() => toggleSelect(item._id)}>
-                                    {selectedItems.includes(item._id) ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '20px', background: 'white', borderRadius: '4px' }}/> : <FaSquare style={{ color: '#ffffff', fontSize: '20px', opacity: 0.8 }}/>}
+                                    {selectedItems.includes(item._id) 
+                                        ? <FaCheckSquare style={{ color: '#c9a84c', fontSize: '22px', background: 'white', borderRadius: '4px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}/> 
+                                        : <FaSquare style={{ color: '#ffffff', fontSize: '22px', opacity: 0.95, filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))', borderRadius: '4px' }}/>
+                                    }
                                 </div>
 
                                 <div className="stock-card-image">
