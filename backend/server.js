@@ -559,6 +559,10 @@ app.post("/api/transactions", verifyToken, async (req, res) => {
     try {
         const transaction = new Transaction(req.body);
         await transaction.save();
+        
+        // ADDED AUDIT LOG
+        await logAction(req, "Created Transaction", `Recorded new transaction for client: ${transaction.client}`);
+        
         res.json(transaction);
     } catch (err) {
         res.status(400).json({ error: err.message });
