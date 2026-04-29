@@ -810,7 +810,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -821,17 +821,24 @@ const STAFF_SECRET_CODE = process.env.STAFF_SECRET_CODE;
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
+// const transporter = nodemailer.createTransport({
+//     host: 'smtp.gmail.com',
+//     port: 465,
+//     secure: true,
+//     auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS
+//     },
+//     family: 4, // Force IPv4
+//     tls: {
+//         rejectUnauthorized: false
+//     }
+// });
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    },
-    family: 4, // Force IPv4
-    tls: {
-        rejectUnauthorized: false
     }
 });
 
