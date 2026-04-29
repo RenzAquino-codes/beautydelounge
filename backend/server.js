@@ -865,7 +865,7 @@ app.use(cors({
 
 // Handle OPTIONS preflight for ALL routes explicitly
 // This is critical on Render — the preflight must return 200 before any auth runs
-app.options('*', cors({
+app.options('/*', cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
