@@ -6,6 +6,7 @@ import {
     PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
     BarChart, Bar, LabelList, LineChart, Line 
 } from "recharts";
+import "./Analytics.css"; // Ensure you import the new CSS file!
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -14,17 +15,9 @@ const CustomTooltip = ({ active, payload, label }) => {
         const isMoney = payload[0].dataKey === 'earnings';
 
         return (
-            <div style={{
-                background: 'rgba(255,255,255,0.95)',
-                border: '1px solid rgba(201,168,76,0.3)',
-                borderRadius: '10px',
-                padding: '12px 16px',
-                fontSize: '13px',
-                color: '#3a3020',
-                boxShadow: '0 4px 12px rgba(74,63,47,0.1)'
-            }}>
-                <p style={{ margin: 0, fontWeight: 600 }}>{title}</p>
-                <p style={{ margin: '4px 0 0', color: '#c9a84c', fontSize: '15px', fontWeight: 600 }}>
+            <div className="custom-tooltip">
+                <p className="custom-tooltip-title">{title}</p>
+                <p className="custom-tooltip-value">
                     {isMoney ? `₱${value.toLocaleString()}` : `${value} transactions`}
                 </p>
             </div>
@@ -33,12 +26,13 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
+// Fixed truncating to ensure it fits mobile screens perfectly
 const CustomYAxisTick = ({ x, y, payload, isMobile }) => {
-    const MAX_CHARS = isMobile ? 10 : 28;
+    const MAX_CHARS = isMobile ? 12 : 22;
     const text = payload.value.length > MAX_CHARS ? payload.value.substring(0, MAX_CHARS) + "..." : payload.value;
     return (
         <g transform={`translate(${x},${y})`}>
-            <text x={0} y={0} dy={4} textAnchor="end" fill="#6b5c45" fontSize={11} fontWeight={500}>
+            <text x={0} y={0} dy={4} textAnchor="end" fill="#6b5c45" fontSize={isMobile ? 10 : 12} fontWeight={500}>
                 {text}
             </text>
         </g>
@@ -98,7 +92,6 @@ function Analytics() {
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => a.count - b.count); 
 
-    // Allow all paid methods to count toward earnings (Pending is the only one excluded)
     const serviceEarnings = filteredTransactions.reduce((acc, t) => {
         const serviceList = Array.isArray(t.service) ? t.service : [t.service];
         const primaryService = serviceList[0];
@@ -111,7 +104,6 @@ function Analytics() {
         .map(([name, earnings]) => ({ name, earnings }))
         .sort((a, b) => a.earnings - b.earnings); 
 
-    // Update payment method charting
     const statusCount = filteredTransactions.reduce((acc, t) => {
         acc[t.status] = (acc[t.status] || 0) + 1;
         return acc;
@@ -128,11 +120,9 @@ function Analytics() {
         .map(([name, earnings]) => ({ name, earnings }))
         .sort((a, b) => new Date(a.name) - new Date(b.name));
 
-    // Exclude 'Pending' from Total Earned
     const totalEarned = filteredTransactions.filter(t => t.status !== 'Pending').reduce((sum, t) => sum + Number(t.amount), 0);
     const topService = serviceData[serviceData.length - 1]?.name || 'N/A';
 
-    // Dynamic color picker for payment methods
     const getStatusColor = (status) => {
         switch(status.toLowerCase()) {
             case 'cash': return '#2ecc71';
@@ -140,7 +130,7 @@ function Analytics() {
             case 'maya': return '#9b59b6';
             case 'bank transfer': return '#f1c40f';
             case 'pending': return '#e74c3c';
-            default: return '#95a5a6'; // Paid or generic
+            default: return '#95a5a6';
         }
     };
 
@@ -161,8 +151,8 @@ function Analytics() {
                         <p>Track your salon's growth and most profitable services.</p>
                     </div>
                     
-                    <div className="filter-controls" style={{ marginTop: isMobile ? '15px' : '0' }}>
-                        <div className="search-container" style={{ minWidth: isMobile ? '100%' : '200px' }}>
+                    <div className="filter-controls">
+                        <div className="search-container">
                             <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#c9a84c' }}/>
                             <input 
                                 type="text" 
@@ -173,7 +163,7 @@ function Analytics() {
                                 style={{ paddingLeft: '35px' }}
                             />
                         </div>
-                        <div className="category-filter" style={{ minWidth: isMobile ? '100%' : '180px' }}>
+                        <div className="category-filter">
                             <select 
                                 value={selectedChart} 
                                 onChange={(e) => setSelectedChart(e.target.value)} 
@@ -194,32 +184,32 @@ function Analytics() {
                 ) : (
                     <>
                         <div className="analytics-summary">
-                            <div className="summary-card" style={{ borderLeft: '4px solid #c9a84c' }}>
-                                <p className="summary-label"><FaMoneyBillWave style={{ marginRight: '6px' }} />Total Earnings</p>
+                            <div className="summary-card card-earnings">
+                                <p className="summary-label"><FaMoneyBillWave />Total Earnings</p>
                                 <h3 className="summary-value">₱{totalEarned.toLocaleString()}</h3>
                             </div>
-                            <div className="summary-card" style={{ borderLeft: '4px solid #8c7a60' }}>
-                                <p className="summary-label"><FaChartLine style={{ marginRight: '6px' }} />Total Transactions</p>
-                                <h3 className="summary-value" style={{ color: '#8c7a60' }}>{filteredTransactions.length}</h3>
+                            <div className="summary-card card-transactions">
+                                <p className="summary-label"><FaChartLine />Total Transactions</p>
+                                <h3 className="summary-value secondary">{filteredTransactions.length}</h3>
                             </div>
-                            <div className="summary-card" style={{ borderLeft: '4px solid #d4b870' }}>
-                                <p className="summary-label"><FaStar style={{ marginRight: '6px' }} />Top Ranked Service</p>
-                                <h3 className="summary-value" style={{ fontSize: '16px', lineHeight: '1.4' }}>{topService}</h3>
+                            <div className="summary-card card-top-service">
+                                <p className="summary-label"><FaStar />Top Ranked Service</p>
+                                <h3 className="summary-value text-small">{topService}</h3>
                             </div>
                         </div>
 
                         {filteredTransactions.length === 0 ? (
-                            <div className="no-results" style={{ marginTop: '40px', padding: '40px', textAlign: 'center', background: 'white', borderRadius: '12px' }}>
+                            <div className="no-data-card">
                                 No analytical data found for "{searchTerm}".
                             </div>
                         ) : (
                             <div className="analytics-grid">
                                 
                                 {(selectedChart === "All" || selectedChart === "Monthly Revenue") && (
-                                    <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+                                    <div className="chart-card full-width">
                                         <h3 className="chart-title">Monthly Revenue</h3>
                                         <ResponsiveContainer width="100%" height={300}>
-                                            <LineChart data={monthlyData} margin={{ top: 20, right: isMobile ? 10 : 30, left: isMobile ? -10 : 20, bottom: 5 }}>
+                                            <LineChart data={monthlyData} margin={{ top: 20, right: isMobile ? 10 : 30, left: 0, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0e0b0" />
                                                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b5c45' }} axisLine={false} tickLine={false} />
                                                 <YAxis tick={{ fontSize: 11, fill: '#6b5c45' }} axisLine={false} tickLine={false} tickFormatter={(val) => `₱${val.toLocaleString()}`} />
@@ -230,14 +220,15 @@ function Analytics() {
                                     </div>
                                 )}
 
+                                {/* FIX: Adjusted left margin to 0 and explicitly set YAxis width. Prevents the bars from shrinking to 0 width. */}
                                 {(selectedChart === "All" || selectedChart === "Most Availed Services") && (
-                                    <div className="chart-card" style={selectedChart === "Most Availed Services" ? { gridColumn: '1 / -1' } : {}}>
+                                    <div className={`chart-card ${selectedChart === "Most Availed Services" ? "full-width" : ""}`}>
                                         <h3 className="chart-title">Most Availed Services</h3>
                                         <ResponsiveContainer width="100%" height={Math.max(300, serviceData.length * 45)}>
-                                            <BarChart data={serviceData} layout="vertical" margin={{ top: 5, right: isMobile ? 30 : 40, left: isMobile ? 80 : 160, bottom: 5 }}>
+                                            <BarChart data={serviceData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0e0b0" />
                                                 <XAxis type="number" hide />
-                                                <YAxis type="category" dataKey="name" width={isMobile ? 75 : 150} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
+                                                <YAxis type="category" dataKey="name" width={isMobile ? 100 : 160} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
                                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(201, 168, 76, 0.05)' }} />
                                                 <Bar dataKey="count" fill="#c9a84c" radius={[0, 4, 4, 0]} barSize={isMobile ? 16 : 22}>
                                                     <LabelList dataKey="count" position="right" style={{ fill: '#8c7a60', fontSize: '12px', fontWeight: 600 }} />
@@ -247,14 +238,15 @@ function Analytics() {
                                     </div>
                                 )}
 
+                                {/* FIX: Adjusted left margin to 0 and explicitly set YAxis width. */}
                                 {(selectedChart === "All" || selectedChart === "Earnings By Service") && (
-                                    <div className="chart-card" style={selectedChart === "Earnings By Service" ? { gridColumn: '1 / -1' } : {}}>
+                                    <div className={`chart-card ${selectedChart === "Earnings By Service" ? "full-width" : ""}`}>
                                         <h3 className="chart-title">Earnings By Service</h3>
                                         <ResponsiveContainer width="100%" height={Math.max(300, earningsData.length * 45)}>
-                                            <BarChart data={earningsData} layout="vertical" margin={{ top: 5, right: isMobile ? 50 : 90, left: isMobile ? 80 : 160, bottom: 5 }}>
+                                            <BarChart data={earningsData} layout="vertical" margin={{ top: 5, right: 50, left: 0, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0e0b0" />
                                                 <XAxis type="number" hide />
-                                                <YAxis type="category" dataKey="name" width={isMobile ? 75 : 150} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
+                                                <YAxis type="category" dataKey="name" width={isMobile ? 100 : 160} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
                                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(201, 168, 76, 0.05)' }} />
                                                 <Bar dataKey="earnings" fill="#a07830" radius={[0, 4, 4, 0]} barSize={isMobile ? 16 : 22}>
                                                     <LabelList dataKey="earnings" position="right" formatter={(val) => `₱${val.toLocaleString()}`} style={{ fill: '#8c7a60', fontSize: '11px', fontWeight: 600 }} />
@@ -265,7 +257,7 @@ function Analytics() {
                                 )}
 
                                 {(selectedChart === "All" || selectedChart === "Payment Method") && (
-                                    <div className="chart-card" style={selectedChart === "Payment Method" ? { gridColumn: '1 / -1' } : {}}>
+                                    <div className={`chart-card ${selectedChart === "Payment Method" ? "full-width" : ""}`}>
                                         <h3 className="chart-title">Payment Method</h3>
                                         <ResponsiveContainer width="100%" height={300}>
                                             <PieChart>

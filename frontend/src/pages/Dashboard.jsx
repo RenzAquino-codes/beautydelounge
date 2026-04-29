@@ -22,7 +22,7 @@ function Dashboard() {
     const [lowStockCount, setLowStockCount] = useState(0);
     const [transactions, setTransactions] = useState([]);
     const [loadingStats, setLoadingStats] = useState(true);
-    
+
     // Fetch Low Stock
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -76,9 +76,11 @@ function Dashboard() {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
-    
+
+    const validPayments = ['Cash', 'GCash', 'Maya', 'Bank Transfer', 'Bank Transfer / Online', 'Paid'];
+
     const todaysEarnings = transactions
-        .filter(t => t.status === 'Paid' && t.date === todayStr)
+        .filter(t => validPayments.includes(t.status) && t.date === todayStr)
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const totalTransactions = transactions.length;
@@ -90,10 +92,10 @@ function Dashboard() {
         });
         return acc;
     }, {});
-    
+
     // Sort to find the most popular
     const topService = Object.entries(serviceCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-    
+
     // Get the 5 most recent transactions
     const recentTransactions = transactions.slice(0, 5);
 
@@ -109,7 +111,7 @@ function Dashboard() {
     ];
 
     const modules = allModules.filter(module => {
-        if (module.adminOnly) return isAdmin; 
+        if (module.adminOnly) return isAdmin;
         return true;
     });
 
@@ -130,7 +132,7 @@ function Dashboard() {
                         </div>
                     ))}
                 </nav>
-                
+
                 {/* Pushed to the bottom */}
                 <div style={{ borderTop: '1px solid #d9cfc0', paddingTop: '15px', marginTop: 'auto' }}>
                     <div className="nav-item" onClick={() => navigate("/dashboard/profile")}>
