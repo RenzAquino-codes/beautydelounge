@@ -12,13 +12,26 @@ const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE;
 const STAFF_SECRET_CODE = process.env.STAFF_SECRET_CODE;
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS
+//     }
+// })
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        // Do not fail on invalid certs
+        rejectUnauthorized: false
     }
-})
+});
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const bcrypt = require('bcrypt');

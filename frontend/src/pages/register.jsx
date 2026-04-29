@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import "./Register.css";
 import { Link, useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaEye, FaEyeSlash } from "react-icons/fa"; // Imported Eye icons
 import logo1 from '../assets/images/logo.jpg'
 import loungeBg from '../assets/images/lounge.png';
 import logo2 from '../assets/images/Groom1.png';
@@ -12,15 +12,22 @@ function Register() {
     const [lastname, setLastname] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [adminCode, setAdminCode] = useState('');
+    
+    // NEW: Visibility toggles
+    const [showPassword, setShowPassword] = useState(false);
+    const [showAdminCode, setShowAdminCode] = useState(false);
+
     const [loading, setLoading] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
     const [step, setStep] = useState(1);
     const [code, setCode] = useState('');
     const [pendingEmail, setPendingEmail] = useState('');
-    const [adminCode, setAdminCode] = useState('');
-    // const [showAdminField, setShowAdminField] = useState(false);
+    
     const [errors, setErrors] = useState({});
-    const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
+    // Allow empty string to pass validation during typing, but enforce letters when characters exist
+    const isValidName = (name) => name === "" || /^[a-zA-Z\s]+$/.test(name);
+    
     const [registerSuccess, setRegisterSuccess] = useState(false);
     const navigate = useNavigate();
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
@@ -32,13 +39,13 @@ function Register() {
 
     const validateForm = () => {
         const newErrors = {};
-        if (!isValidName(firstname)) newErrors.firstname = "Letters only, no numbers or special characters.";
-        if (middlename && !isValidName(middlename)) newErrors.middlename = "Letters only, no numbers or special characters.";
-        if (!isValidName(lastname)) newErrors.lastname = "Letters only, no numbers or special characters.";
+        if (!firstname.trim()) newErrors.firstname = "First name is required.";
+        if (!lastname.trim()) newErrors.lastname = "Last name is required.";
         if (!isPasswordValid()) newErrors.password = "Password does not meet all requirements.";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
     const passwordRules = [
         { label: "Minimum 8 characters", test: (p) => p.length >= 8 },
         { label: "At least 1 uppercase letter", test: (p) => /[A-Z]/.test(p) },
@@ -48,13 +55,12 @@ function Register() {
 
     const isPasswordValid = () => passwordRules.every(rule => rule.test(password));
 
-
     const handlesubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return; 
         if (!adminCode) {
-        return showToast("Authorization code is required.", "error");
-    }
+            return showToast("Authorization code is required.", "error");
+        }
         setLoading(true);
         try {
             const response = await fetch("https://beautydelounge-backend.onrender.com/api/register", {
@@ -84,7 +90,6 @@ function Register() {
         setLoading(false);
     };
 
-
     const handleVerify = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -108,6 +113,7 @@ function Register() {
         }
         setLoading(false);
     };
+
     if (registerSuccess) {
         return (
             <div className="login-success-screen">
@@ -125,15 +131,12 @@ function Register() {
 
     return (
         <div className="register-split-container">
-            {/* LEFT SIDE - Branding */}
             <div className="register-left">
                 <img src={logo1} alt="Beauty De Lounge" className="hero-logo" />
             </div>
 
-            {/* RIGHT SIDE - Form */}
             <div className="register-right" style={{ backgroundImage: `url(${loungeBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                 <div className="form-container">
-
 
                     {step === 1 && (
                         <>
@@ -149,18 +152,20 @@ function Register() {
                                             value={firstname}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                setFirstname(val);
-                                                if (val && !isValidName(val)) {
-                                                    setErrors(prev => ({ ...prev, firstname: "Letters only, no numbers or special characters." }));
-                                                } else {
+                                                if (isValidName(val)) {
+                                                    setFirstname(val);
                                                     setErrors(prev => ({ ...prev, firstname: '' }));
+                                                } else {
+                                                    // NEW: Visual feedback in placeholder
+                                                    setFirstname('');
+                                                    setErrors(prev => ({ ...prev, firstname: 'Letters only allowed!' }));
                                                 }
                                             }}
-                                            placeholder="First name"
+                                            placeholder={errors.firstname || "First name"}
+                                            className={errors.firstname ? 'input-error-placeholder' : ''}
                                             style={{ borderColor: errors.firstname ? '#e74c3c' : '' }}
                                             required
                                         />
-                                        {errors.firstname && <span className="field-error">{errors.firstname}</span>}
                                     </div>
                                     <div className="form-group">
                                         <label>Middle Name</label>
@@ -169,17 +174,18 @@ function Register() {
                                             value={middlename}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                setMiddlename(val);
-                                                if (val && !isValidName(val)) {
-                                                    setErrors(prev => ({ ...prev, middlename: "Letters only, no numbers or special characters." }));
-                                                } else {
+                                                if (isValidName(val)) {
+                                                    setMiddlename(val);
                                                     setErrors(prev => ({ ...prev, middlename: '' }));
+                                                } else {
+                                                    setMiddlename('');
+                                                    setErrors(prev => ({ ...prev, middlename: 'Letters only allowed!' }));
                                                 }
                                             }}
-                                            placeholder="Middle name"
+                                            placeholder={errors.middlename || "Middle name"}
+                                            className={errors.middlename ? 'input-error-placeholder' : ''}
                                             style={{ borderColor: errors.middlename ? '#e74c3c' : '' }}
                                         />
-                                        {errors.middlename && <span className="field-error">{errors.middlename}</span>}
                                     </div>
                                 </div>
 
@@ -190,94 +196,92 @@ function Register() {
                                         value={lastname}
                                         onChange={(e) => {
                                             const val = e.target.value;
-                                            setLastname(val);
-                                            if (val && !isValidName(val)) {
-                                                setErrors(prev => ({ ...prev, lastname: "Letters only, no numbers or special characters." }));
-                                            } else {
+                                            if (isValidName(val)) {
+                                                setLastname(val);
                                                 setErrors(prev => ({ ...prev, lastname: '' }));
+                                            } else {
+                                                setLastname('');
+                                                setErrors(prev => ({ ...prev, lastname: 'Letters only allowed!' }));
                                             }
                                         }}
-                                        placeholder="Last name"
+                                        placeholder={errors.lastname || "Last name"}
+                                        className={errors.lastname ? 'input-error-placeholder' : ''}
                                         style={{ borderColor: errors.lastname ? '#e74c3c' : '' }}
                                         required
                                     />
-                                    {errors.lastname && <span className="field-error">{errors.lastname}</span>}
                                 </div>
                                 <div className="form-group">
                                     <label>Email</label>
                                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email address" required />
                                 </div>
 
-                                <div className="form-group">
+                                <div className="form-group" style={{ position: 'relative' }}>
                                     <label>Password</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        onFocus={() => setPasswordFocused(true)}
-                                        placeholder="Enter password"
-                                        style={{ borderColor: errors.password ? '#e74c3c' : passwordFocused && isPasswordValid() ? '#c9a84c' : '' }}
-                                        required
-                                    />
-                                    {/* Hidden admin code toggle */}
-                                    {/* <div style={{ textAlign: 'right', marginBottom: '8px' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowAdminField(!showAdminField)}
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            onFocus={() => setPasswordFocused(true)}
+                                            placeholder="Enter password"
+                                            style={{ 
+                                                borderColor: errors.password ? '#e74c3c' : passwordFocused && isPasswordValid() ? '#c9a84c' : '',
+                                                paddingRight: '40px' // Make room for the eye icon
+                                            }}
+                                            required
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowPassword(!showPassword)}
                                             style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                fontSize: '12px',
-                                                color: '#8c7a60',
-                                                cursor: 'pointer',
-                                                padding: 0,
-                                                width: 'auto',
-                                                textDecoration: 'underline'
+                                                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                                background: 'none', border: 'none', color: '#8c7a60', cursor: 'pointer',
+                                                padding: '0', display: 'flex', alignItems: 'center'
                                             }}
                                         >
-                                            {showAdminField ? 'Hide admin code' : 'Have an admin code?'}
+                                            {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                                         </button>
-                                    </div> */}
-
-
-                                    {/* {showAdminField && (
-                                        <div className="form-group">
-                                            <label>Admin Code</label>
-                                            <input
-                                                type="password"
-                                                value={adminCode}
-                                                onChange={(e) => setAdminCode(e.target.value)}
-                                                placeholder="Enter admin code"
-                                            />
-                                        </div>
-                                    )} */}
-                                    <div className="form-group">
-                                        <label>Access Code</label>
-                                        <input
-                                            type="password"
-                                            value={adminCode}
-                                            onChange={(e) => setAdminCode(e.target.value)}
-                                            placeholder="Enter your Staff or Admin code"
-                                            required
-                                            style={{ borderColor: '#c9a84c' }} // Highlight it in gold to show importance
-                                        />
-                                        <p style={{ fontSize: '11px', color: '#8c7a60', marginTop: '4px' }}>
-                                            *A valid authorization code is required to register.
-                                        </p>
                                     </div>
-                                    {/* {(passwordFocused || password) && (
-                                        <ul className="password-rules">
+                                    
+                                    {/* RESTORED: Password Rules */}
+                                    {(passwordFocused || password) && (
+                                        <ul className="password-rules" style={{ marginTop: '8px', paddingLeft: 0, listStyle: 'none', fontSize: '12px' }}>
                                             {passwordRules.map((rule, i) => (
-                                                <li key={i} className={rule.test(password) ? 'rule-pass' : 'rule-fail'}>
-                                                    {rule.test(password)
-                                                        ? <FaCheckCircle style={{ marginRight: '8px' }} />
-                                                        : <FaTimesCircle style={{ marginRight: '8px' }} />
-                                                    }
+                                                <li key={i} style={{ color: rule.test(password) ? '#2ecc71' : '#8c7a60', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                                                    {rule.test(password) ? <FaCheckCircle style={{ marginRight: '6px' }} /> : <FaTimesCircle style={{ marginRight: '6px' }} />}
                                                     {rule.label}
                                                 </li>
                                             ))}
                                         </ul>
-                                    )} */}
+                                    )}
+                                </div>
+
+                                <div className="form-group" style={{ position: 'relative' }}>
+                                    <label>Access Code</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showAdminCode ? "text" : "password"}
+                                            value={adminCode}
+                                            onChange={(e) => setAdminCode(e.target.value)}
+                                            placeholder="Enter your Staff or Admin code"
+                                            required
+                                            style={{ borderColor: '#c9a84c', paddingRight: '40px' }} 
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowAdminCode(!showAdminCode)}
+                                            style={{
+                                                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                                background: 'none', border: 'none', color: '#8c7a60', cursor: 'pointer',
+                                                padding: '0', display: 'flex', alignItems: 'center'
+                                            }}
+                                        >
+                                            {showAdminCode ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                                        </button>
+                                    </div>
+                                    <p style={{ fontSize: '11px', color: '#8c7a60', marginTop: '4px' }}>
+                                        *A valid authorization code is required to register.
+                                    </p>
                                 </div>
 
                                 <button type="submit" disabled={loading}>
@@ -290,7 +294,6 @@ function Register() {
                             </p>
                         </>
                     )}
-
 
                     {step === 2 && (
                         <>
@@ -320,15 +323,8 @@ function Register() {
                                 <button
                                     onClick={() => setStep(1)}
                                     style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#4a3f2f',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        marginLeft: '5px',
-                                        padding: 0,
-                                        fontSize: '14px',
-                                        width: 'auto'
+                                        background: 'none', border: 'none', color: '#4a3f2f', fontWeight: 'bold',
+                                        cursor: 'pointer', marginLeft: '5px', padding: 0, fontSize: '14px', width: 'auto'
                                     }}
                                 >
                                     Go back

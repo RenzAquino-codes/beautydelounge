@@ -103,6 +103,7 @@ input {
     transition: all 0.3s ease;
 }
 
+
 input::placeholder {
     color: #b5a898;
 }
@@ -239,6 +240,13 @@ button:disabled {
     border-top-color: #c9a84c;
     border-radius: 50%;
     animation: spin 0.9s linear infinite;
+}
+
+/* CSS for error placeholders in Register form */
+.input-error-placeholder::placeholder {
+    color: #e74c3c !important;
+    opacity: 1 !important;
+    font-weight: 500;
 }
 
 @keyframes spin {
