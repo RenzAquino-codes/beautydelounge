@@ -226,13 +226,18 @@ function ManageUsers() {
                                             required
                                         />
 
-                                        <div style={{ position: 'relative', width: '100%' }}>
+                                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
                                             <input
                                                 type={showPassword ? "text" : "password"}
                                                 value={form.password}
                                                 onChange={e => setForm({ ...form, password: e.target.value })}
                                                 placeholder="Password"
-                                                style={{ borderColor: errors.password ? '#e74c3c' : '', paddingRight: '40px', width: '100%' }}
+                                                style={{
+                                                    borderColor: errors.password ? '#e74c3c' : '',
+                                                    paddingRight: '45px',
+                                                    width: '100%',
+                                                    margin: 0
+                                                }}
                                                 required
                                             />
                                             <button
@@ -240,16 +245,17 @@ function ManageUsers() {
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 style={{
                                                     position: 'absolute',
-                                                    right: '14px',
-                                                    top: '50%',
-                                                    transform: 'translateY(-50%)',
-                                                    background: 'none',
+                                                    right: '12px',
+                                                    height: '100%',
+                                                    background: 'transparent',
                                                     border: 'none',
                                                     color: '#8c7a60',
                                                     cursor: 'pointer',
                                                     padding: '0',
                                                     display: 'flex',
-                                                    alignItems: 'center'
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    outline: 'none'
                                                 }}
                                             >
                                                 {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
