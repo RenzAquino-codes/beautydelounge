@@ -6,7 +6,7 @@ import { FaArrowLeft, FaPlus, FaEdit, FaCheckSquare, FaSquare, FaCheckCircle, Fa
 function TransactionHistory() {
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", time: "", status: "Paid" });
+    const [form, setForm] = useState({ client: "", service: [], amount: "", date: "", time: "", status: "Cash" });
     const [transactions, setTransactions] = useState([]);
     const [editingItem, setEditingItem] = useState(null);
     const [services, setServices] = useState([]);
@@ -27,7 +27,6 @@ function TransactionHistory() {
         navigate("/");
     };
 
-    // Fetch transactions
     useEffect(() => {
         const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/transactions", {
@@ -38,7 +37,6 @@ function TransactionHistory() {
             .catch(err => console.error(err));
     }, []);
 
-    // Fetch services from Service Pricing
     useEffect(() => {
         const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/services", {
@@ -49,10 +47,8 @@ function TransactionHistory() {
             .catch(err => console.error(err));
     }, []);
 
-    // Handle service checkbox
     const handleServiceSelect = (serviceName, servicePrice) => {
         const alreadySelected = form.service.includes(serviceName);
-
         let updatedServices;
         if (alreadySelected) {
             updatedServices = form.service.filter(s => s !== serviceName);
@@ -60,7 +56,6 @@ function TransactionHistory() {
             updatedServices = [...form.service, serviceName];
         }
 
-        // Recalculate total from selected services
         const newTotal = updatedServices.reduce((sum, name) => {
             const found = services.find(s => s.name === name);
             return sum + (found ? Number(found.price) : 0);
@@ -106,7 +101,7 @@ function TransactionHistory() {
             }
 
             setShowForm(false);
-            setForm({ client: "", service: [], amount: "", date: "", time: "", status: "Paid" });
+            setForm({ client: "", service: [], amount: "", date: "", time: "", status: "Cash" });
             setEditingItem(null);
         } catch (err) {
             showToast("Failed to save transaction.");
@@ -116,13 +111,16 @@ function TransactionHistory() {
     };
 
     const openEdit = (transaction) => {
+        let safeStatus = transaction.status;
+        if (safeStatus === 'Paid') safeStatus = 'Cash'; // Default legacy 'Paid' to 'Cash'
+
         setForm({
             client: transaction.client,
             service: Array.isArray(transaction.service) ? transaction.service : [transaction.service],
             amount: transaction.amount,
             date: transaction.date,
             time: transaction.time || '',
-            status: transaction.status
+            status: safeStatus
         });
         setEditingItem(transaction._id);
         setShowForm(true);
@@ -137,7 +135,8 @@ function TransactionHistory() {
         return `${formattedHour}:${minutes} ${ampm}`;
     };
 
-    const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    const total = transactions.filter(t => t.status !== 'Pending').reduce((sum, t) => sum + Number(t.amount), 0);
+    
     const filteredTransactions = transactions.filter(t =>
         t.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (Array.isArray(t.service) ? t.service.join(" ") : t.service).toLowerCase().includes(searchTerm.toLowerCase())
@@ -146,7 +145,7 @@ function TransactionHistory() {
     const sortedTransactions = [...filteredTransactions].sort((a, b) => {
         if (a.status === 'Pending' && b.status !== 'Pending') return -1;
         if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-        return 0; // If they have the same status, keep them in their newest-first order
+        return 0; 
     });
 
     return (
@@ -188,7 +187,7 @@ function TransactionHistory() {
                     const now = new Date();
                     const today = now.toISOString().split('T')[0];
                     const currentTime = now.toTimeString().slice(0, 5);
-                    setForm({ client: "", service: [], amount: "", date: today, time: currentTime, status: "Paid" });
+                    setForm({ client: "", service: [], amount: "", date: today, time: currentTime, status: "Cash" });
                     setEditingItem(null);
                     setShowForm(true);
                 }}>
@@ -200,24 +199,25 @@ function TransactionHistory() {
                         <div className="modal">
                             <h3>{editingItem ? "Edit Transaction" : "Add Transaction"}</h3>
 
-                            <input
-                                placeholder="Client Name"
-                                value={form.client}
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    setForm({ ...form, client: val });
-                                    if (val && !isValidName(val)) {
-                                        setClientError("Letters only, no numbers or special characters.");
-                                    } else {
-                                        setClientError('');
-                                    }
-                                }}
-                                style={{ borderColor: clientError ? '#e74c3c' : '' }}
-                            />
-                            {clientError && <span style={{ fontSize: '12px', color: '#e74c3c', marginTop: '-8px' }}>{clientError}</span>}
+                            <div>
+                                <input
+                                    placeholder="Client Name"
+                                    value={form.client}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setForm({ ...form, client: val });
+                                        if (val && !isValidName(val)) {
+                                            setClientError("Letters only, no numbers or special characters.");
+                                        } else {
+                                            setClientError('');
+                                        }
+                                    }}
+                                    style={{ borderColor: clientError ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
+                                />
+                                {clientError && <span style={{ fontSize: '12px', color: '#e74c3c', display: 'block' }}>{clientError}</span>}
+                            </div>
 
-                            {/* Service Checklist */}
-                            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b5c45', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b5c45', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '10px' }}>
                                 Select Service
                             </label>
                             <div className="service-checklist">
@@ -245,7 +245,6 @@ function TransactionHistory() {
                                 )}
                             </div>
 
-                            {/* Amount auto-filled but editable */}
                             <input
                                 placeholder="Amount (₱)"
                                 type="number"
@@ -255,33 +254,43 @@ function TransactionHistory() {
                                 onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                             />
 
-                            <input
-                                placeholder="Date"
-                                type="date"
-                                value={form.date}
-                                onChange={e => setForm({ ...form, date: e.target.value })}
-                            />
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <input
+                                    placeholder="Date"
+                                    type="date"
+                                    value={form.date}
+                                    onChange={e => setForm({ ...form, date: e.target.value })}
+                                    style={{ flex: 1 }}
+                                />
 
-                            <input
-                                placeholder="Time"
-                                type="time"
-                                value={form.time}
-                                onChange={e => setForm({ ...form, time: e.target.value })}
-                            />
+                                <input
+                                    placeholder="Time"
+                                    type="time"
+                                    value={form.time}
+                                    onChange={e => setForm({ ...form, time: e.target.value })}
+                                    style={{ flex: 1 }}
+                                />
+                            </div>
 
+                            <label style={{ fontSize: '12px', fontWeight: '600', color: '#6b5c45', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '5px' }}>
+                                Payment Method
+                            </label>
                             <select
                                 value={form.status}
                                 onChange={e => setForm({ ...form, status: e.target.value })}
                             >
-                                <option>Paid</option>
-                                <option>Pending</option>
+                                <option value="Cash">Cash</option>
+                                <option value="GCash">GCash</option>
+                                <option value="Maya">Maya</option>
+                                <option value="Bank Transfer">Bank Transfer / Online</option>
+                                <option value="Pending">Pending (Unpaid)</option>
                             </select>
 
-                            <div className="modal-actions">
+                            <div className="modal-actions" style={{ marginTop: '10px' }}>
                                 <button onClick={handleSave}>Save</button>
                                 <button className="cancel-btn" onClick={() => {
                                     setShowForm(false);
-                                    setForm({ client: "", service: [], amount: "", date: "", time: "", status: "Paid" });
+                                    setForm({ client: "", service: [], amount: "", date: "", time: "", status: "Cash" });
                                     setClientError('');
                                 }}>Cancel</button>
                             </div>
@@ -297,7 +306,7 @@ function TransactionHistory() {
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>Status</th>
+                            <th>Payment Method</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -311,12 +320,11 @@ function TransactionHistory() {
                                     <td>{t.date}</td>
                                     <td>{formatTime(t.time)}</td>
                                     <td>
-                                        <span className={`status-badge ${t.status.toLowerCase()}`}>
+                                        <span className={`status-badge ${t.status.replace(/\s+/g, '-').toLowerCase()}`}>
                                             {t.status}
                                         </span>
                                     </td>
                                     <td>
-                                        {/* Delete button removed — edit only */}
                                         <button className="icon-btn edit" onClick={() => openEdit(t)}>
                                             <FaEdit />
                                         </button>
@@ -334,7 +342,6 @@ function TransactionHistory() {
                 </table>
             </main>
 
-            {/* Toast */}
             {toast.show && (
                 <div className={`toast toast-${toast.type}`}>
                     <span className="toast-icon">

@@ -13,7 +13,6 @@ function ManageUsers() {
     const [code, setCode] = useState('');
     const [confirmDelete, setConfirmDelete] = useState(null);
     
-    // NEW: Show Password State
     const [showPassword, setShowPassword] = useState(false);
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
@@ -33,7 +32,6 @@ function ManageUsers() {
         navigate("/");
     };
 
-    // Allow empty string so it doesn't block backspacing, but enforce letters
     const isValidName = (name) => name === "" || /^[a-zA-Z\s]+$/.test(name);
 
     const passwordRules = [
@@ -44,7 +42,6 @@ function ManageUsers() {
     ];
     const isPasswordValid = () => passwordRules.every(rule => rule.test(form.password));
 
-    // Fetch all users
     useEffect(() => {
         const token = localStorage.getItem("token");
         fetch("https://beautydelounge-backend.onrender.com/api/users", {
@@ -109,7 +106,6 @@ function ManageUsers() {
                 setCode('');
                 setForm({ firstName: '', middleName: '', lastName: '', email: '', password: '', role: 'staff' });
                 
-                // Refresh users list
                 fetch("https://beautydelounge-backend.onrender.com/api/users", {
                     headers: { "Authorization": `Bearer ${token}` }
                 }).then(r => r.json()).then(d => setUsers(d));
@@ -163,16 +159,14 @@ function ManageUsers() {
                     <FaPlus /> Create Account
                 </button>
 
-                {/* Create Account Modal */}
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
                             {step === 1 ? (
                                 <>
                                     <h3>Create Account</h3>
-                                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                         
-                                        {/* NAME FIELDS */}
                                         <div style={{ display: 'flex', gap: '10px' }}>
                                             <div style={{ flex: 1 }}>
                                                 <input
@@ -180,19 +174,15 @@ function ManageUsers() {
                                                     value={form.firstName}
                                                     onChange={(e) => {
                                                         const val = e.target.value;
-                                                        if (isValidName(val)) {
-                                                            setForm({ ...form, firstName: val });
-                                                            setErrors(prev => ({ ...prev, firstName: '' }));
-                                                        } else {
-                                                            setForm({ ...form, firstName: '' });
-                                                            setErrors(prev => ({ ...prev, firstName: 'Letters only allowed!' }));
-                                                        }
+                                                        setForm({ ...form, firstName: val });
+                                                        if (!isValidName(val)) setErrors(prev => ({ ...prev, firstName: 'Letters only allowed.' }));
+                                                        else setErrors(prev => ({ ...prev, firstName: '' }));
                                                     }}
-                                                    placeholder={errors.firstName || "First Name"}
-                                                    className={errors.firstName ? 'input-error-placeholder' : ''}
-                                                    style={{ borderColor: errors.firstName ? '#e74c3c' : '', width: '100%' }}
+                                                    placeholder="First Name"
+                                                    style={{ borderColor: errors.firstName ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
                                                     required
                                                 />
+                                                {errors.firstName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.firstName}</span>}
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <input
@@ -200,39 +190,33 @@ function ManageUsers() {
                                                     value={form.middleName}
                                                     onChange={(e) => {
                                                         const val = e.target.value;
-                                                        if (isValidName(val)) {
-                                                            setForm({ ...form, middleName: val });
-                                                            setErrors(prev => ({ ...prev, middleName: '' }));
-                                                        } else {
-                                                            setForm({ ...form, middleName: '' });
-                                                            setErrors(prev => ({ ...prev, middleName: 'Letters only allowed!' }));
-                                                        }
+                                                        setForm({ ...form, middleName: val });
+                                                        if (!isValidName(val)) setErrors(prev => ({ ...prev, middleName: 'Letters only allowed.' }));
+                                                        else setErrors(prev => ({ ...prev, middleName: '' }));
                                                     }}
-                                                    placeholder={errors.middleName || "Middle Name"}
-                                                    className={errors.middleName ? 'input-error-placeholder' : ''}
-                                                    style={{ borderColor: errors.middleName ? '#e74c3c' : '', width: '100%' }}
+                                                    placeholder="Middle Name"
+                                                    style={{ borderColor: errors.middleName ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
                                                 />
+                                                {errors.middleName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.middleName}</span>}
                                             </div>
                                         </div>
                                         
-                                        <input
-                                            type="text"
-                                            value={form.lastName}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                if (isValidName(val)) {
+                                        <div style={{ flex: 1 }}>
+                                            <input
+                                                type="text"
+                                                value={form.lastName}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
                                                     setForm({ ...form, lastName: val });
-                                                    setErrors(prev => ({ ...prev, lastName: '' }));
-                                                } else {
-                                                    setForm({ ...form, lastName: '' });
-                                                    setErrors(prev => ({ ...prev, lastName: 'Letters only allowed!' }));
-                                                }
-                                            }}
-                                            placeholder={errors.lastName || "Last Name"}
-                                            className={errors.lastName ? 'input-error-placeholder' : ''}
-                                            style={{ borderColor: errors.lastName ? '#e74c3c' : '', width: '100%' }}
-                                            required
-                                        />
+                                                    if (!isValidName(val)) setErrors(prev => ({ ...prev, lastName: 'Letters only allowed.' }));
+                                                    else setErrors(prev => ({ ...prev, lastName: '' }));
+                                                }}
+                                                placeholder="Last Name"
+                                                style={{ borderColor: errors.lastName ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
+                                                required
+                                            />
+                                            {errors.lastName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.lastName}</span>}
+                                        </div>
 
                                         <input
                                             placeholder="Email"
@@ -242,8 +226,7 @@ function ManageUsers() {
                                             required
                                         />
 
-                                        {/* PASSWORD FIELD WITH TOGGLE */}
-                                        <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                             <input
                                                 type={showPassword ? "text" : "password"}
                                                 value={form.password}
@@ -256,18 +239,16 @@ function ManageUsers() {
                                                 type="button" 
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 style={{
-                                                    position: 'absolute', right: '12px', top: '22px', transform: 'translateY(-50%)',
-                                                    background: 'none', border: 'none', color: '#8c7a60', cursor: 'pointer',
-                                                    padding: '0', display: 'flex', alignItems: 'center'
+                                                    position: 'absolute', right: '12px', background: 'none', border: 'none', 
+                                                    color: '#8c7a60', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center'
                                                 }}
                                             >
                                                 {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                                             </button>
                                         </div>
 
-                                        {/* Password rules list */}
                                         {form.password && (
-                                            <ul className="password-rules" style={{ margin: '0 0 8px 0', paddingLeft: 0, listStyle: 'none', fontSize: '12px', textAlign: 'left' }}>
+                                            <ul className="password-rules" style={{ margin: '-5px 0 0 0', paddingLeft: 0, listStyle: 'none', fontSize: '12px', textAlign: 'left' }}>
                                                 {passwordRules.map((rule, i) => (
                                                     <li key={i} style={{ color: rule.test(form.password) ? '#2ecc71' : '#8c7a60', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
                                                         {rule.test(form.password) ? <FaCheckCircle style={{ marginRight: '6px' }} /> : <FaTimesCircle style={{ marginRight: '6px' }} />}
@@ -277,16 +258,16 @@ function ManageUsers() {
                                             </ul>
                                         )}
 
-                                        {/* Role selector */}
                                         <select
                                             value={form.role}
                                             onChange={e => setForm({ ...form, role: e.target.value })}
+                                            style={{ marginTop: '5px' }}
                                         >
                                             <option value="staff">Staff</option>
                                             <option value="admin">Admin</option>
                                         </select>
 
-                                        <div className="modal-actions" style={{ marginTop: '10px' }}>
+                                        <div className="modal-actions" style={{ marginTop: '5px' }}>
                                             <button type="submit" disabled={loading}>
                                                 {loading ? "Sending code..." : "Send Verification →"}
                                             </button>
@@ -328,7 +309,6 @@ function ManageUsers() {
                     </div>
                 )}
 
-                {/* Users Table */}
                 <table className="data-table">
                     <thead>
                         <tr>

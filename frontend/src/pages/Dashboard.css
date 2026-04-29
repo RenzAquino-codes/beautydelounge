@@ -345,29 +345,40 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
+    text-transform: capitalize;
 }
 
+/* Fallback for old "Paid" records */
 .status-badge.paid {
     background: rgba(201, 168, 76, 0.15);
     color: #8a6d1e;
 }
 
+/* New Payment Methods */
+.status-badge.cash {
+    background: #e8f5e9;
+    color: #27ae60;
+}
+
+.status-badge.gcash {
+    background: #ebf5fb;
+    color: #2980b9;
+}
+
+.status-badge.maya {
+    background: #f4ecf7;
+    color: #8e44ad;
+}
+
+.status-badge.bank.transfer,
+.status-badge.bank {
+    background: #fef9e7;
+    color: #f39c12;
+}
+
 .status-badge.pending {
     background: #fff3e0;
     color: #e65100;
-}
-
-/* =====================
-   MOBILE
-===================== */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 200px;
-    }
-
-    .main-content {
-        padding: 24px;
-    }
 }
 
 /* =====================

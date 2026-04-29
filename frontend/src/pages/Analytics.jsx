@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar } from "react-icons/fa";
+import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar, FaSearch } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import {
     PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
@@ -33,7 +33,6 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
-// Dynamic Y-Axis: Shortens text drastically on mobile so charts don't overflow
 const CustomYAxisTick = ({ x, y, payload, isMobile }) => {
     const MAX_CHARS = isMobile ? 10 : 28;
     const text = payload.value.length > MAX_CHARS ? payload.value.substring(0, MAX_CHARS) + "..." : payload.value;
@@ -51,8 +50,8 @@ function Analytics() {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // NEW: View Mode State (Dropdown)
     const [selectedChart, setSelectedChart] = useState("All");
+    const [searchTerm, setSearchTerm] = useState("");
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     const handleLogout = () => {
@@ -80,8 +79,17 @@ function Analytics() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 1. Most Availed Services
-    const serviceCount = transactions.reduce((acc, t) => {
+    const filteredTransactions = transactions.filter(t => {
+        if (!searchTerm) return true;
+        const searchLower = searchTerm.toLowerCase();
+        const clientMatch = t.client?.toLowerCase().includes(searchLower);
+        const serviceMatch = Array.isArray(t.service) 
+            ? t.service.some(s => s?.toLowerCase().includes(searchLower))
+            : t.service?.toLowerCase().includes(searchLower);
+        return clientMatch || serviceMatch;
+    });
+
+    const serviceCount = filteredTransactions.reduce((acc, t) => {
         const serviceList = Array.isArray(t.service) ? t.service : [t.service];
         serviceList.forEach(s => { if (s) acc[s] = (acc[s] || 0) + 1; });
         return acc;
@@ -90,11 +98,11 @@ function Analytics() {
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => a.count - b.count); 
 
-    // 2. Earnings per Service
-    const serviceEarnings = transactions.reduce((acc, t) => {
+    // Allow all paid methods to count toward earnings (Pending is the only one excluded)
+    const serviceEarnings = filteredTransactions.reduce((acc, t) => {
         const serviceList = Array.isArray(t.service) ? t.service : [t.service];
         const primaryService = serviceList[0];
-        if (primaryService && t.status === 'Paid') {
+        if (primaryService && t.status !== 'Pending') {
             acc[primaryService] = (acc[primaryService] || 0) + Number(t.amount);
         }
         return acc;
@@ -103,16 +111,15 @@ function Analytics() {
         .map(([name, earnings]) => ({ name, earnings }))
         .sort((a, b) => a.earnings - b.earnings); 
 
-    // 3. Paid vs Pending
-    const statusCount = transactions.reduce((acc, t) => {
+    // Update payment method charting
+    const statusCount = filteredTransactions.reduce((acc, t) => {
         acc[t.status] = (acc[t.status] || 0) + 1;
         return acc;
     }, {});
     const statusData = Object.entries(statusCount).map(([name, value]) => ({ name, value }));
 
-    // 4. Monthly Earnings
-    const monthlyEarnings = transactions.reduce((acc, t) => {
-        if (!t.date || t.status !== 'Paid') return acc;
+    const monthlyEarnings = filteredTransactions.reduce((acc, t) => {
+        if (!t.date || t.status === 'Pending') return acc;
         const month = new Date(t.date).toLocaleString('default', { month: 'short', year: 'numeric' });
         acc[month] = (acc[month] || 0) + Number(t.amount);
         return acc;
@@ -121,8 +128,21 @@ function Analytics() {
         .map(([name, earnings]) => ({ name, earnings }))
         .sort((a, b) => new Date(a.name) - new Date(b.name));
 
-    const totalEarned = transactions.filter(t => t.status === 'Paid').reduce((sum, t) => sum + Number(t.amount), 0);
+    // Exclude 'Pending' from Total Earned
+    const totalEarned = filteredTransactions.filter(t => t.status !== 'Pending').reduce((sum, t) => sum + Number(t.amount), 0);
     const topService = serviceData[serviceData.length - 1]?.name || 'N/A';
+
+    // Dynamic color picker for payment methods
+    const getStatusColor = (status) => {
+        switch(status.toLowerCase()) {
+            case 'cash': return '#2ecc71';
+            case 'gcash': return '#3498db';
+            case 'maya': return '#9b59b6';
+            case 'bank transfer': return '#f1c40f';
+            case 'pending': return '#e74c3c';
+            default: return '#95a5a6'; // Paid or generic
+        }
+    };
 
     return (
         <div className="dashboard-container">
@@ -141,9 +161,19 @@ function Analytics() {
                         <p>Track your salon's growth and most profitable services.</p>
                     </div>
                     
-                    {/* UPGRADED: Dropdown Chart Selector */}
                     <div className="filter-controls" style={{ marginTop: isMobile ? '15px' : '0' }}>
-                        <div className="category-filter" style={{ minWidth: isMobile ? '100%' : '250px' }}>
+                        <div className="search-container" style={{ minWidth: isMobile ? '100%' : '200px' }}>
+                            <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#c9a84c' }}/>
+                            <input 
+                                type="text" 
+                                placeholder="Search client or service..." 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)} 
+                                className="search-input"
+                                style={{ paddingLeft: '35px' }}
+                            />
+                        </div>
+                        <div className="category-filter" style={{ minWidth: isMobile ? '100%' : '180px' }}>
                             <select 
                                 value={selectedChart} 
                                 onChange={(e) => setSelectedChart(e.target.value)} 
@@ -153,7 +183,7 @@ function Analytics() {
                                 <option value="Monthly Revenue">Monthly Revenue</option>
                                 <option value="Most Availed Services">Most Availed Services</option>
                                 <option value="Earnings By Service">Earnings By Service</option>
-                                <option value="Payment Status">Payment Status</option>
+                                <option value="Payment Method">Payment Method</option>
                             </select>
                         </div>
                     </div>
@@ -170,7 +200,7 @@ function Analytics() {
                             </div>
                             <div className="summary-card" style={{ borderLeft: '4px solid #8c7a60' }}>
                                 <p className="summary-label"><FaChartLine style={{ marginRight: '6px' }} />Total Transactions</p>
-                                <h3 className="summary-value" style={{ color: '#8c7a60' }}>{transactions.length}</h3>
+                                <h3 className="summary-value" style={{ color: '#8c7a60' }}>{filteredTransactions.length}</h3>
                             </div>
                             <div className="summary-card" style={{ borderLeft: '4px solid #d4b870' }}>
                                 <p className="summary-label"><FaStar style={{ marginRight: '6px' }} />Top Ranked Service</p>
@@ -178,14 +208,13 @@ function Analytics() {
                             </div>
                         </div>
 
-                        {transactions.length === 0 ? (
+                        {filteredTransactions.length === 0 ? (
                             <div className="no-results" style={{ marginTop: '40px', padding: '40px', textAlign: 'center', background: 'white', borderRadius: '12px' }}>
-                                No analytical data found yet. Add some transactions!
+                                No analytical data found for "{searchTerm}".
                             </div>
                         ) : (
                             <div className="analytics-grid">
                                 
-                                {/* 1. Monthly Revenue */}
                                 {(selectedChart === "All" || selectedChart === "Monthly Revenue") && (
                                     <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
                                         <h3 className="chart-title">Monthly Revenue</h3>
@@ -201,15 +230,14 @@ function Analytics() {
                                     </div>
                                 )}
 
-                                {/* 2. Most Availed Services */}
                                 {(selectedChart === "All" || selectedChart === "Most Availed Services") && (
-                                    <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+                                    <div className="chart-card" style={selectedChart === "Most Availed Services" ? { gridColumn: '1 / -1' } : {}}>
                                         <h3 className="chart-title">Most Availed Services</h3>
                                         <ResponsiveContainer width="100%" height={Math.max(300, serviceData.length * 45)}>
-                                            <BarChart data={serviceData} layout="vertical" margin={{ top: 5, right: isMobile ? 30 : 40, left: isMobile ? 80 : 200, bottom: 5 }}>
+                                            <BarChart data={serviceData} layout="vertical" margin={{ top: 5, right: isMobile ? 30 : 40, left: isMobile ? 80 : 160, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0e0b0" />
                                                 <XAxis type="number" hide />
-                                                <YAxis type="category" dataKey="name" width={isMobile ? 75 : 190} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
+                                                <YAxis type="category" dataKey="name" width={isMobile ? 75 : 150} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
                                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(201, 168, 76, 0.05)' }} />
                                                 <Bar dataKey="count" fill="#c9a84c" radius={[0, 4, 4, 0]} barSize={isMobile ? 16 : 22}>
                                                     <LabelList dataKey="count" position="right" style={{ fill: '#8c7a60', fontSize: '12px', fontWeight: 600 }} />
@@ -219,15 +247,14 @@ function Analytics() {
                                     </div>
                                 )}
 
-                                {/* 3. Earnings By Service */}
                                 {(selectedChart === "All" || selectedChart === "Earnings By Service") && (
-                                    <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
+                                    <div className="chart-card" style={selectedChart === "Earnings By Service" ? { gridColumn: '1 / -1' } : {}}>
                                         <h3 className="chart-title">Earnings By Service</h3>
                                         <ResponsiveContainer width="100%" height={Math.max(300, earningsData.length * 45)}>
-                                            <BarChart data={earningsData} layout="vertical" margin={{ top: 5, right: isMobile ? 50 : 90, left: isMobile ? 80 : 200, bottom: 5 }}>
+                                            <BarChart data={earningsData} layout="vertical" margin={{ top: 5, right: isMobile ? 50 : 90, left: isMobile ? 80 : 160, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0e0b0" />
                                                 <XAxis type="number" hide />
-                                                <YAxis type="category" dataKey="name" width={isMobile ? 75 : 190} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
+                                                <YAxis type="category" dataKey="name" width={isMobile ? 75 : 150} tick={<CustomYAxisTick isMobile={isMobile}/>} axisLine={false} tickLine={false} />
                                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(201, 168, 76, 0.05)' }} />
                                                 <Bar dataKey="earnings" fill="#a07830" radius={[0, 4, 4, 0]} barSize={isMobile ? 16 : 22}>
                                                     <LabelList dataKey="earnings" position="right" formatter={(val) => `₱${val.toLocaleString()}`} style={{ fill: '#8c7a60', fontSize: '11px', fontWeight: 600 }} />
@@ -237,10 +264,9 @@ function Analytics() {
                                     </div>
                                 )}
 
-                                {/* 4. Payment Status */}
-                                {(selectedChart === "All" || selectedChart === "Payment Status") && (
-                                    <div className="chart-card" style={selectedChart === "Payment Status" ? { gridColumn: '1 / -1' } : {}}>
-                                        <h3 className="chart-title">Payment Status</h3>
+                                {(selectedChart === "All" || selectedChart === "Payment Method") && (
+                                    <div className="chart-card" style={selectedChart === "Payment Method" ? { gridColumn: '1 / -1' } : {}}>
+                                        <h3 className="chart-title">Payment Method</h3>
                                         <ResponsiveContainer width="100%" height={300}>
                                             <PieChart>
                                                 <Pie 
@@ -251,11 +277,11 @@ function Analytics() {
                                                     labelLine={false}
                                                 >
                                                     {statusData.map((entry, index) => (
-                                                        <Cell key={index} fill={entry.name === 'Paid' ? '#c9a84c' : '#e74c3c'} />
+                                                        <Cell key={index} fill={getStatusColor(entry.name)} />
                                                     ))}
                                                 </Pie>
                                                 <Tooltip content={<CustomTooltip />} />
-                                                <Legend iconType="circle" iconSize={12} formatter={(value) => <span style={{ color: '#3a3020', fontWeight: 500 }}>{value}</span>} />
+                                                <Legend iconType="circle" iconSize={12} formatter={(value) => <span style={{ color: '#3a3020', fontWeight: 500, textTransform: 'capitalize' }}>{value}</span>} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
