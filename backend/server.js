@@ -865,16 +865,16 @@ app.use(cors({
 
 // Handle OPTIONS preflight for ALL routes explicitly
 // This is critical on Render — the preflight must return 200 before any auth runs
-app.options('/*', cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('Not allowed by CORS'));
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// app.options('/*', cors({
+//     origin: function (origin, callback) {
+//         if (!origin) return callback(null, true);
+//         if (allowedOrigins.includes(origin)) return callback(null, true);
+//         return callback(new Error('Not allowed by CORS'));
+//     },
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     credentials: true,
+//     allowedHeaders: ['Content-Type', 'Authorization']
+// }));
 
 const helmet = require('helmet');
 app.use(helmet());
