@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaPlus, FaTrash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaTrash, FaCheckCircle, FaTimesCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
-
 
 function ManageUsers() {
     const navigate = useNavigate();
@@ -13,6 +12,10 @@ function ManageUsers() {
     const [pendingEmail, setPendingEmail] = useState('');
     const [code, setCode] = useState('');
     const [confirmDelete, setConfirmDelete] = useState(null);
+    
+    // NEW: Show Password State
+    const [showPassword, setShowPassword] = useState(false);
+
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
     const [form, setForm] = useState({
         firstName: '', middleName: '', lastName: '',
@@ -26,12 +29,12 @@ function ManageUsers() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        localStorage.clear();
         navigate("/");
     };
 
-    const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name);
+    // Allow empty string so it doesn't block backspacing, but enforce letters
+    const isValidName = (name) => name === "" || /^[a-zA-Z\s]+$/.test(name);
 
     const passwordRules = [
         { label: "Minimum 8 characters", test: (p) => p.length >= 8 },
@@ -55,10 +58,8 @@ function ManageUsers() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = {};
-        if (!isValidName(form.firstName)) newErrors.firstName = "Letters only.";
-        if (form.middleName && !isValidName(form.middleName)) newErrors.middleName = "Letters only.";
-        if (!isValidName(form.lastName)) newErrors.lastName = "Letters only.";
         if (!isPasswordValid()) newErrors.password = "Password does not meet requirements.";
+        
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
 
@@ -107,10 +108,10 @@ function ManageUsers() {
                 setStep(1);
                 setCode('');
                 setForm({ firstName: '', middleName: '', lastName: '', email: '', password: '', role: 'staff' });
+                
                 // Refresh users list
-                const token2 = localStorage.getItem("token");
                 fetch("https://beautydelounge-backend.onrender.com/api/users", {
-                    headers: { "Authorization": `Bearer ${token2}` }
+                    headers: { "Authorization": `Bearer ${token}` }
                 }).then(r => r.json()).then(d => setUsers(d));
             } else {
                 showToast(data.error);
@@ -170,33 +171,69 @@ function ManageUsers() {
                                 <>
                                     <h3>Create Account</h3>
                                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        
+                                        {/* NAME FIELDS */}
                                         <div style={{ display: 'flex', gap: '10px' }}>
                                             <div style={{ flex: 1 }}>
                                                 <input
-                                                    placeholder="First Name"
+                                                    type="text"
                                                     value={form.firstName}
-                                                    onChange={e => setForm({ ...form, firstName: e.target.value })}
-                                                    style={{ borderColor: errors.firstName ? '#e74c3c' : '' }}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (isValidName(val)) {
+                                                            setForm({ ...form, firstName: val });
+                                                            setErrors(prev => ({ ...prev, firstName: '' }));
+                                                        } else {
+                                                            setForm({ ...form, firstName: '' });
+                                                            setErrors(prev => ({ ...prev, firstName: 'Letters only allowed!' }));
+                                                        }
+                                                    }}
+                                                    placeholder={errors.firstName || "First Name"}
+                                                    className={errors.firstName ? 'input-error-placeholder' : ''}
+                                                    style={{ borderColor: errors.firstName ? '#e74c3c' : '', width: '100%' }}
                                                     required
                                                 />
-                                                {errors.firstName && <span style={{ fontSize: '11px', color: '#e74c3c' }}>{errors.firstName}</span>}
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <input
-                                                    placeholder="Middle Name"
+                                                    type="text"
                                                     value={form.middleName}
-                                                    onChange={e => setForm({ ...form, middleName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (isValidName(val)) {
+                                                            setForm({ ...form, middleName: val });
+                                                            setErrors(prev => ({ ...prev, middleName: '' }));
+                                                        } else {
+                                                            setForm({ ...form, middleName: '' });
+                                                            setErrors(prev => ({ ...prev, middleName: 'Letters only allowed!' }));
+                                                        }
+                                                    }}
+                                                    placeholder={errors.middleName || "Middle Name"}
+                                                    className={errors.middleName ? 'input-error-placeholder' : ''}
+                                                    style={{ borderColor: errors.middleName ? '#e74c3c' : '', width: '100%' }}
                                                 />
                                             </div>
                                         </div>
+                                        
                                         <input
-                                            placeholder="Last Name"
+                                            type="text"
                                             value={form.lastName}
-                                            onChange={e => setForm({ ...form, lastName: e.target.value })}
-                                            style={{ borderColor: errors.lastName ? '#e74c3c' : '' }}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (isValidName(val)) {
+                                                    setForm({ ...form, lastName: val });
+                                                    setErrors(prev => ({ ...prev, lastName: '' }));
+                                                } else {
+                                                    setForm({ ...form, lastName: '' });
+                                                    setErrors(prev => ({ ...prev, lastName: 'Letters only allowed!' }));
+                                                }
+                                            }}
+                                            placeholder={errors.lastName || "Last Name"}
+                                            className={errors.lastName ? 'input-error-placeholder' : ''}
+                                            style={{ borderColor: errors.lastName ? '#e74c3c' : '', width: '100%' }}
                                             required
                                         />
-                                        {errors.lastName && <span style={{ fontSize: '11px', color: '#e74c3c' }}>{errors.lastName}</span>}
+
                                         <input
                                             placeholder="Email"
                                             type="email"
@@ -204,28 +241,42 @@ function ManageUsers() {
                                             onChange={e => setForm({ ...form, email: e.target.value })}
                                             required
                                         />
-                                        <input
-                                            placeholder="Password"
-                                            type="password"
-                                            value={form.password}
-                                            onChange={e => setForm({ ...form, password: e.target.value })}
-                                            style={{ borderColor: errors.password ? '#e74c3c' : '' }}
-                                            required
-                                        />
-                                        {/* Password rules */}
+
+                                        {/* PASSWORD FIELD WITH TOGGLE */}
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={form.password}
+                                                onChange={e => setForm({ ...form, password: e.target.value })}
+                                                placeholder="Password"
+                                                style={{ borderColor: errors.password ? '#e74c3c' : '', paddingRight: '40px', width: '100%' }}
+                                                required
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                style={{
+                                                    position: 'absolute', right: '12px', top: '22px', transform: 'translateY(-50%)',
+                                                    background: 'none', border: 'none', color: '#8c7a60', cursor: 'pointer',
+                                                    padding: '0', display: 'flex', alignItems: 'center'
+                                                }}
+                                            >
+                                                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                                            </button>
+                                        </div>
+
+                                        {/* Password rules list */}
                                         {form.password && (
-                                            <ul className="password-rules">
+                                            <ul className="password-rules" style={{ margin: '0 0 8px 0', paddingLeft: 0, listStyle: 'none', fontSize: '12px', textAlign: 'left' }}>
                                                 {passwordRules.map((rule, i) => (
-                                                    <li key={i} className={rule.test(form.password) ? 'rule-pass' : 'rule-fail'}>
-                                                        {rule.test(form.password)
-                                                            ? <FaCheckCircle style={{ marginRight: '6px' }} />
-                                                            : <FaTimesCircle style={{ marginRight: '6px' }} />
-                                                        }
+                                                    <li key={i} style={{ color: rule.test(form.password) ? '#2ecc71' : '#8c7a60', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                                                        {rule.test(form.password) ? <FaCheckCircle style={{ marginRight: '6px' }} /> : <FaTimesCircle style={{ marginRight: '6px' }} />}
                                                         {rule.label}
                                                     </li>
                                                 ))}
                                             </ul>
                                         )}
+
                                         {/* Role selector */}
                                         <select
                                             value={form.role}
@@ -235,12 +286,13 @@ function ManageUsers() {
                                             <option value="admin">Admin</option>
                                         </select>
 
-                                        <div className="modal-actions">
+                                        <div className="modal-actions" style={{ marginTop: '10px' }}>
                                             <button type="submit" disabled={loading}>
                                                 {loading ? "Sending code..." : "Send Verification →"}
                                             </button>
                                             <button type="button" className="cancel-btn" onClick={() => {
                                                 setShowForm(false);
+                                                setShowPassword(false);
                                                 setForm({ firstName: '', middleName: '', lastName: '', email: '', password: '', role: 'staff' });
                                                 setErrors({});
                                             }}>Cancel</button>
@@ -307,12 +359,12 @@ function ManageUsers() {
                 </table>
             </main>
 
-            {/* Confirm Delete */}
+            {/* Confirm Delete Modal */}
             {confirmDelete && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
-                        <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', marginBottom: '12px' }} />
-                        <h3>Delete User?</h3>
+                        <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', margin: '0 auto 12px' }} />
+                        <h3 style={{ marginBottom: '8px' }}>Delete User?</h3>
                         <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>This action cannot be undone.</p>
                         <div className="modal-actions">
                             <button onClick={confirmDeleteAction} style={{ background: '#e74c3c' }}>Yes, Delete</button>
