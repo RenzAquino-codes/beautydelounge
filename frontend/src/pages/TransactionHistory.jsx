@@ -281,7 +281,6 @@ function TransactionHistory() {
                                 <option value="GCash">GCash</option>
                                 <option value="Maya">Maya</option>
                                 <option value="Bank Transfer">Bank Transfer / Online</option>
-                                <option value="Pending">Pending (Unpaid)</option>
                             </select>
 
                             <div className="modal-actions" style={{ marginTop: '10px' }}>
