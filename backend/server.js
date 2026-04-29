@@ -1427,8 +1427,8 @@ app.post("/api/admin/create-user", verifyToken, verifyAdmin, async (req, res) =>
 
         res.json({ message: "Verification code sent to the user's email." });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
+        console.error("FULL ERROR:", err);
+        res.status(500).json({ error: `EMAIL FAILED: ${err.message}` }); 
     }
 });
 

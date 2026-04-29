@@ -611,7 +611,7 @@ function ManageUsers() {
                                         />
 
                                         {/* ── Password field with consistent eye icon ── */}
-                                        <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'relative', width: '100%', display: 'block' }}>
                                             <input
                                                 type={showPassword ? "text" : "password"}
                                                 value={form.password}
@@ -619,32 +619,33 @@ function ManageUsers() {
                                                 placeholder="Password"
                                                 style={{
                                                     borderColor: errors.password ? '#e74c3c' : '',
-                                                    paddingRight: '42px',
+                                                    paddingRight: '40px',
                                                     width: '100%',
-                                                    margin: 0
+                                                    boxSizing: 'border-box'
                                                 }}
                                                 required
                                             />
-                                            {/* Eye toggle — uses icon-btn class to match the rest of the UI */}
                                             <button
                                                 type="button"
-                                                className="icon-btn"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 style={{
                                                     position: 'absolute',
-                                                    right: '4px',
+                                                    right: '12px',
                                                     top: '50%',
                                                     transform: 'translateY(-50%)',
+                                                    background: 'transparent',
+                                                    border: 'none',
                                                     color: '#8c7a60',
+                                                    cursor: 'pointer',
+                                                    padding: '0',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    width: '34px',
-                                                    height: '34px',
+                                                    outline: 'none',
+                                                    height: 'auto'
                                                 }}
-                                                aria-label={showPassword ? "Hide password" : "Show password"}
                                             >
-                                                {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                                             </button>
                                         </div>
 
