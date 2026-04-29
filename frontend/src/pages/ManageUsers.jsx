@@ -12,7 +12,7 @@ function ManageUsers() {
     const [pendingEmail, setPendingEmail] = useState('');
     const [code, setCode] = useState('');
     const [confirmDelete, setConfirmDelete] = useState(null);
-    
+
     const [showPassword, setShowPassword] = useState(false);
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
@@ -56,7 +56,7 @@ function ManageUsers() {
         e.preventDefault();
         const newErrors = {};
         if (!isPasswordValid()) newErrors.password = "Password does not meet requirements.";
-        
+
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
 
@@ -105,7 +105,7 @@ function ManageUsers() {
                 setStep(1);
                 setCode('');
                 setForm({ firstName: '', middleName: '', lastName: '', email: '', password: '', role: 'staff' });
-                
+
                 fetch("https://beautydelounge-backend.onrender.com/api/users", {
                     headers: { "Authorization": `Bearer ${token}` }
                 }).then(r => r.json()).then(d => setUsers(d));
@@ -166,7 +166,7 @@ function ManageUsers() {
                                 <>
                                     <h3>Create Account</h3>
                                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        
+
                                         <div style={{ display: 'flex', gap: '10px' }}>
                                             <div style={{ flex: 1 }}>
                                                 <input
@@ -200,7 +200,7 @@ function ManageUsers() {
                                                 {errors.middleName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.middleName}</span>}
                                             </div>
                                         </div>
-                                        
+
                                         <div style={{ flex: 1 }}>
                                             <input
                                                 type="text"
@@ -226,7 +226,7 @@ function ManageUsers() {
                                             required
                                         />
 
-                                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                        <div style={{ position: 'relative', width: '100%' }}>
                                             <input
                                                 type={showPassword ? "text" : "password"}
                                                 value={form.password}
@@ -235,12 +235,21 @@ function ManageUsers() {
                                                 style={{ borderColor: errors.password ? '#e74c3c' : '', paddingRight: '40px', width: '100%' }}
                                                 required
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 style={{
-                                                    position: 'absolute', right: '12px', background: 'none', border: 'none', 
-                                                    color: '#8c7a60', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center'
+                                                    position: 'absolute',
+                                                    right: '14px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: '#8c7a60',
+                                                    cursor: 'pointer',
+                                                    padding: '0',
+                                                    display: 'flex',
+                                                    alignItems: 'center'
                                                 }}
                                             >
                                                 {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}

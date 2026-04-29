@@ -135,18 +135,16 @@ function TransactionHistory() {
         return `${formattedHour}:${minutes} ${ampm}`;
     };
 
-    const total = transactions.filter(t => t.status !== 'Pending').reduce((sum, t) => sum + Number(t.amount), 0);
+  
+    const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
     
     const filteredTransactions = transactions.filter(t =>
         t.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (Array.isArray(t.service) ? t.service.join(" ") : t.service).toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-        if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-        if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-        return 0; 
-    });
+    
+    const sortedTransactions = [...filteredTransactions];
 
     return (
         <div className="dashboard-container">
