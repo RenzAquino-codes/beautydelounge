@@ -552,7 +552,7 @@ function ManageUsers() {
                                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
                                         <div style={{ display: 'flex', gap: '10px' }}>
-                                            <div style={{ flex: 1 }}>
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <input
                                                     type="text"
                                                     value={form.firstName}
@@ -563,12 +563,12 @@ function ManageUsers() {
                                                         else setErrors(prev => ({ ...prev, firstName: '' }));
                                                     }}
                                                     placeholder="First Name"
-                                                    style={{ borderColor: errors.firstName ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
+                                                    style={{ borderColor: errors.firstName ? '#e74c3c' : '', width: '100%', margin: 0 }}
                                                     required
                                                 />
-                                                {errors.firstName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.firstName}</span>}
+                                                {errors.firstName && <span style={{ color: '#e74c3c', fontSize: '11px', fontStyle: 'italic' }}>{errors.firstName}</span>}
                                             </div>
-                                            <div style={{ flex: 1 }}>
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <input
                                                     type="text"
                                                     value={form.middleName}
@@ -579,13 +579,13 @@ function ManageUsers() {
                                                         else setErrors(prev => ({ ...prev, middleName: '' }));
                                                     }}
                                                     placeholder="Middle Name"
-                                                    style={{ borderColor: errors.middleName ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
+                                                    style={{ borderColor: errors.middleName ? '#e74c3c' : '', width: '100%', margin: 0 }}
                                                 />
-                                                {errors.middleName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.middleName}</span>}
+                                                {errors.middleName && <span style={{ color: '#e74c3c', fontSize: '11px', fontStyle: 'italic' }}>{errors.middleName}</span>}
                                             </div>
                                         </div>
 
-                                        <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <input
                                                 type="text"
                                                 value={form.lastName}
@@ -596,10 +596,10 @@ function ManageUsers() {
                                                     else setErrors(prev => ({ ...prev, lastName: '' }));
                                                 }}
                                                 placeholder="Last Name"
-                                                style={{ borderColor: errors.lastName ? '#e74c3c' : '', width: '100%', marginBottom: '4px' }}
+                                                style={{ borderColor: errors.lastName ? '#e74c3c' : '', width: '100%', margin: 0 }}
                                                 required
                                             />
-                                            {errors.lastName && <span style={{ color: '#e74c3c', fontSize: '12px', display: 'block' }}>{errors.lastName}</span>}
+                                            {errors.lastName && <span style={{ color: '#e74c3c', fontSize: '11px', fontStyle: 'italic' }}>{errors.lastName}</span>}
                                         </div>
 
                                         <input
@@ -607,63 +607,54 @@ function ManageUsers() {
                                             type="email"
                                             value={form.email}
                                             onChange={e => setForm({ ...form, email: e.target.value })}
+                                            style={{ margin: 0 }}
                                             required
                                         />
 
-                                        {/* ── Password field with consistent eye icon ── */}
-                                        <div style={{ position: 'relative', width: '100%', display: 'block' }}>
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                value={form.password}
-                                                onChange={e => setForm({ ...form, password: e.target.value })}
-                                                placeholder="Password"
-                                                style={{
-                                                    borderColor: errors.password ? '#e74c3c' : '',
-                                                    paddingRight: '40px',
-                                                    width: '100%',
-                                                    boxSizing: 'border-box'
-                                                }}
-                                                required
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                style={{
-                                                    position: 'absolute',
-                                                    right: '12px',
-                                                    top: '50%',
-                                                    transform: 'translateY(-50%)',
-                                                    background: 'transparent',
-                                                    border: 'none',
-                                                    color: '#8c7a60',
-                                                    cursor: 'pointer',
-                                                    padding: '0',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    outline: 'none',
-                                                    height: 'auto'
-                                                }}
-                                            >
-                                                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                                            </button>
-                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <div style={{ position: 'relative', width: '100%' }}>
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={form.password}
+                                                    onChange={e => setForm({ ...form, password: e.target.value })}
+                                                    placeholder="Password"
+                                                    style={{
+                                                        borderColor: errors.password ? '#e74c3c' : '',
+                                                        paddingRight: '45px',
+                                                        width: '100%',
+                                                        boxSizing: 'border-box',
+                                                        margin: 0
+                                                    }}
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    style={{
+                                                        position: 'absolute', right: '0', top: '0', bottom: '0', padding: '0 15px',
+                                                        background: 'transparent', border: 'none', color: '#8c7a60', cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                                                </button>
+                                            </div>
 
-                                        {form.password && (
-                                            <ul className="password-rules" style={{ margin: '-5px 0 0 0', paddingLeft: 0, listStyle: 'none', fontSize: '12px', textAlign: 'left' }}>
-                                                {passwordRules.map((rule, i) => (
-                                                    <li key={i} style={{ color: rule.test(form.password) ? '#2ecc71' : '#8c7a60', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
-                                                        {rule.test(form.password) ? <FaCheckCircle style={{ marginRight: '6px' }} /> : <FaTimesCircle style={{ marginRight: '6px' }} />}
-                                                        {rule.label}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
+                                            {form.password && (
+                                                <ul className="password-rules" style={{ margin: '4px 0 0 0', paddingLeft: 0, listStyle: 'none', fontSize: '12px', textAlign: 'left' }}>
+                                                    {passwordRules.map((rule, i) => (
+                                                        <li key={i} style={{ color: rule.test(form.password) ? '#2ecc71' : '#8c7a60', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                                                            {rule.test(form.password) ? <FaCheckCircle style={{ marginRight: '6px' }} /> : <FaTimesCircle style={{ marginRight: '6px' }} />}
+                                                            {rule.label}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
 
                                         <select
                                             value={form.role}
                                             onChange={e => setForm({ ...form, role: e.target.value })}
-                                            style={{ marginTop: '5px' }}
                                         >
                                             <option value="staff">Staff</option>
                                             <option value="admin">Admin</option>
@@ -741,7 +732,6 @@ function ManageUsers() {
                 </table>
             </main>
 
-            {/* Confirm Delete Modal */}
             {confirmDelete && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
