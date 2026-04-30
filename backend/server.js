@@ -810,7 +810,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
-// dns.setServers(['8.8.8.8', '8.8.4.4']);
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -821,34 +821,15 @@ const STAFF_SECRET_CODE = process.env.STAFF_SECRET_CODE;
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// const transporter = nodemailer.createTransport({
-//     host: 'smtp.gmail.com',
-//     port: 465,
-//     secure: true,
-//     auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS
-//     },
-//     family: 4, // Force IPv4
-//     tls: {
-//         rejectUnauthorized: false
-//     }
-// });
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS
-//     }
-// });
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // Use SSL
+    secure: true, 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
+    connectionTimeout: 5000, 
     tls: {
         rejectUnauthorized: false
     }
@@ -859,18 +840,14 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const bcrypt = require('bcrypt');
 const app = express();
 
-// =====================
-// CORS — Must be BEFORE helmet and all routes
-// =====================
 const allowedOrigins = [
     'https://beautydelounge.vercel.app',
-    'http://localhost:5173',  // Vite dev
-    'http://localhost:3000'   // CRA dev
+    'http://localhost:5173',  
+    'http://localhost:3000'   
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, Postman)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
@@ -881,19 +858,6 @@ app.use(cors({
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Handle OPTIONS preflight for ALL routes explicitly
-// This is critical on Render — the preflight must return 200 before any auth runs
-// app.options('/*', cors({
-//     origin: function (origin, callback) {
-//         if (!origin) return callback(null, true);
-//         if (allowedOrigins.includes(origin)) return callback(null, true);
-//         return callback(new Error('Not allowed by CORS'));
-//     },
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//     credentials: true,
-//     allowedHeaders: ['Content-Type', 'Authorization']
-// }));
 
 const helmet = require('helmet');
 app.use(helmet());
@@ -915,9 +879,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/beautydelounge';
-const mongooseOptions = {
-    serverSelectionTimeoutMS: 10000,
-};
+const mongooseOptions = { serverSelectionTimeoutMS: 10000 };
 
 async function connectToMongo() {
     try {
@@ -932,7 +894,6 @@ async function connectToMongo() {
 // =====================
 // SCHEMAS
 // =====================
-
 const userSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     middleName: { type: String, required: true },
@@ -963,7 +924,7 @@ const transactionSchema = new mongoose.Schema({
     amount: { type: Number, required: true, min: [1.00, "Amount must be greater than zero"] },
     date: { type: String },
     time: { type: String },
-    status: { type: String, default: "Paid" }
+    status: { type: String, default: "Cash" }
 });
 
 const categorySchema = new mongoose.Schema({
@@ -1032,9 +993,6 @@ const verifyAdmin = (req, res, next) => {
     next();
 };
 
-// =====================
-// AUDIT LOGGER UTILITY
-// =====================
 const logAction = async (req, action, details = "") => {
     try {
         const userName = req.user ? `${req.user.firstName || 'Unknown'} ${req.user.lastName || 'User'}` : 'System';
@@ -1046,9 +1004,6 @@ const logAction = async (req, action, details = "") => {
     }
 };
 
-// =====================
-// Default Admin Account Creation
-// =====================
 async function createDefaultAdmin() {
     try {
         const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'Padmin@example.com';
@@ -1066,8 +1021,6 @@ async function createDefaultAdmin() {
             });
             await defaultAdmin.save();
             console.log(`Default admin account created: ${adminEmail}`);
-        } else {
-            console.log('Default admin account already exists.');
         }
     } catch (error) {
         console.error('Error creating default admin account:', error);
@@ -1087,13 +1040,7 @@ app.post("/api/login", async (req, res) => {
         if (!isMatch) return res.status(400).json({ error: "Incorrect Password!" });
 
         const token = jwt.sign(
-            {
-                id: user._id,
-                role: user.role,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email
-            },
+            { id: user._id, role: user.role, firstName: user.firstName, lastName: user.lastName, email: user.email },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '1d' }
         );
@@ -1101,58 +1048,6 @@ app.post("/api/login", async (req, res) => {
         const { password: pwd, ...userData } = user.toObject();
         res.json({ message: "Login Successful!", token: token, user: userData });
     } catch (err) {
-        console.error("LOGIN ERROR:", err);
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
-app.post("/api/register", async (req, res) => {
-    try {
-        const { firstName, middleName, lastName, email, password, adminCode } = req.body;
-        const isAdmin = adminCode === process.env.ADMIN_SECRET_CODE;
-        const isStaff = adminCode === process.env.STAFF_SECRET_CODE;
-
-        if (!isAdmin && !isStaff) {
-            return res.status(401).json({ error: "Invalid access code. You are not authorized to register." });
-        }
-        const role = isAdmin ? 'admin' : 'staff';
-
-        const nameRegex = /^[a-zA-Z\s]+$/;
-        if (!nameRegex.test(firstName))
-            return res.status(400).json({ error: "First name must contain letters only." });
-        if (middleName && !nameRegex.test(middleName))
-            return res.status(400).json({ error: "Middle name must contain letters only." });
-        if (!nameRegex.test(lastName))
-            return res.status(400).json({ error: "Last name must contain letters only." });
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser)
-            return res.status(400).json({ error: "Email already registered" });
-
-        const code = crypto.randomInt(100000, 999999).toString();
-        await PendingUser.deleteOne({ email });
-
-        const pendingUser = new PendingUser({ firstName, middleName, lastName, email, password, role, code });
-        await pendingUser.save();
-
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Beauty De Lounge - Email Verification',
-            html: `
-            <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
-                <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
-                <p style="color: #6b5c45;">Your verification code is below:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
-                </div>
-                <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
-            </div>
-            `
-        });
-        res.json({ message: "Verification code sent to your email." });
-    } catch (err) {
-        console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -1162,27 +1057,19 @@ app.post("/api/verify-email", async (req, res) => {
         const { email, code } = req.body;
         const pending = await PendingUser.findOne({ email });
 
-        if (!pending)
-            return res.status(400).json({ error: "No registration found or the code has expired. Please register again." });
-
-        if (pending.code !== code)
-            return res.status(400).json({ error: "Incorrect code. Please try again." });
+        if (!pending) return res.status(400).json({ error: "No registration found or the code has expired. Please register again." });
+        if (pending.code !== code) return res.status(400).json({ error: "Incorrect code. Please try again." });
 
         const hashedPassword = await bcrypt.hash(pending.password, 10);
         const user = new User({
-            firstName: pending.firstName,
-            middleName: pending.middleName,
-            lastName: pending.lastName,
-            email: pending.email,
-            password: hashedPassword,
-            role: pending.role
+            firstName: pending.firstName, middleName: pending.middleName, lastName: pending.lastName,
+            email: pending.email, password: hashedPassword, role: pending.role
         });
         await user.save();
         await PendingUser.deleteOne({ email });
 
         res.json({ message: "Email verified! Account created successfully." });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -1227,7 +1114,6 @@ app.delete("/api/transactions/:id", verifyToken, async (req, res) => {
         if (!deleted) return res.status(404).json({ error: "Transaction not found" });
         res.json({ message: "Deleted successfully" });
     } catch (err) {
-        console.error("DELETE ERROR:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -1266,10 +1152,13 @@ app.put("/api/stocks/:id", verifyToken, async (req, res) => {
     }
 });
 
+// UPGRADED: Added Audit Logging for Deleted Stocks
 app.delete("/api/stocks/:id", verifyToken, async (req, res) => {
     try {
         const deleted = await Stock.findByIdAndDelete(req.params.id);
         if (!deleted) return res.status(404).json({ error: "Stock not found" });
+        
+        await logAction(req, "Deleted Stock", `Deleted stock: ${deleted.name}`);
         res.json({ message: "Deleted successfully" });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
@@ -1319,10 +1208,13 @@ app.put("/api/services/:id", verifyToken, async (req, res) => {
     }
 });
 
+// UPGRADED: Added Audit Logging for Deleted Services
 app.delete("/api/services/:id", verifyToken, async (req, res) => {
     try {
         const deleted = await Service.findByIdAndDelete(req.params.id);
         if (!deleted) return res.status(404).json({ error: "Service not found" });
+        
+        await logAction(req, "Deleted Service", `Deleted service: ${deleted.name}`);
         res.json({ message: "Deleted successfully" });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
@@ -1411,43 +1303,32 @@ app.post("/api/admin/create-user", verifyToken, verifyAdmin, async (req, res) =>
         const { firstName, middleName, lastName, email, password, role } = req.body;
 
         const existingUser = await User.findOne({ email });
-        if (existingUser)
-            return res.status(400).json({ error: "Email already registered" });
+        if (existingUser) return res.status(400).json({ error: "Email already registered" });
 
         const nameRegex = /^[a-zA-Z\s]+$/;
-        if (!nameRegex.test(firstName))
-            return res.status(400).json({ error: "First name must contain letters only." });
-        if (!nameRegex.test(lastName))
-            return res.status(400).json({ error: "Last name must contain letters only." });
+        if (!nameRegex.test(firstName)) return res.status(400).json({ error: "First name must contain letters only." });
+        if (!nameRegex.test(lastName)) return res.status(400).json({ error: "Last name must contain letters only." });
 
         const code = crypto.randomInt(100000, 999999).toString();
         await PendingUser.deleteOne({ email });
 
-        const pendingUser = new PendingUser({
-            firstName, middleName, lastName, email, password, role, code
-        });
+        const pendingUser = new PendingUser({ firstName, middleName, lastName, email, password, role, code });
         await pendingUser.save();
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Your Beauty De Lounge Account Verification',
-            html: `
-            <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
-                <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
-                <p style="color: #6b5c45;">An admin has created an account for you. Use the code below to verify your email:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
-                </div>
-                <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes.</p>
-            </div>
-            `
-        });
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Your Beauty De Lounge Account Verification',
+                html: `<div style="text-align: center; margin: 30px 0;"><span style="font-size: 36px; font-weight: bold;">${code}</span></div>`
+            });
+        } catch (mailErr) {
+            console.log(`\n\n🚨 RENDER BLOCKED EMAIL 🚨\nYOUR CODE IS: ${code}\n\n`);
+        }
 
-        res.json({ message: "Verification code sent to the user's email." });
+        res.json({ message: "Verification code ready! (Check console if email fails)" });
     } catch (err) {
-        console.error("FULL ERROR:", err);
-        res.status(500).json({ error: `EMAIL FAILED: ${err.message}` }); 
+        res.status(500).json({ error: "Server error" }); 
     }
 });
 
@@ -1465,24 +1346,18 @@ app.post("/api/forgot-password", async (req, res) => {
         const resetRecord = new ResetCode({ email, code });
         await resetRecord.save();
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Password Reset Code',
-            html: `
-            <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 40px; background: #f5f0e8; border-radius: 16px;">
-                <h2 style="color: #3a3020; letter-spacing: 2px; text-transform: uppercase; font-weight: 300;">Beauty De Lounge</h2>
-                <p style="color: #6b5c45;">You requested a password reset. Use the code below:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #c9a84c;">${code}</span>
-                </div>
-                <p style="color: #8c7a60; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
-            </div>
-            `
-        });
-        res.json({ message: "Reset code sent to your email." });
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Password Reset Code',
+                html: `<div style="text-align: center; margin: 30px 0;"><span style="font-size: 36px; font-weight: bold;">${code}</span></div>`
+            });
+        } catch (mailErr) {
+            console.log(`\n\n🚨 RENDER BLOCKED EMAIL 🚨\nYOUR RESET CODE IS: ${code}\n\n`);
+        }
+        res.json({ message: "Reset code ready! (Check console if email fails)" });
     } catch (err) {
-        console.error("FORGOT PASSWORD ERROR:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -1492,10 +1367,8 @@ app.post("/api/reset-password", async (req, res) => {
         const { email, code, newPassword } = req.body;
         const pending = await ResetCode.findOne({ email });
 
-        if (!pending)
-            return res.status(400).json({ error: "No reset request found or the code has expired." });
-        if (pending.code !== code)
-            return res.status(400).json({ error: "Incorrect code. Please try again." });
+        if (!pending) return res.status(400).json({ error: "No reset request found or the code has expired." });
+        if (pending.code !== code) return res.status(400).json({ error: "Incorrect code. Please try again." });
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await User.findOneAndUpdate({ email }, { password: hashedPassword });
@@ -1503,7 +1376,6 @@ app.post("/api/reset-password", async (req, res) => {
 
         res.json({ message: "Password reset successfully!" });
     } catch (err) {
-        console.error("RESET PASSWORD ERROR:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -1513,7 +1385,8 @@ app.post("/api/reset-password", async (req, res) => {
 // =====================
 app.get("/api/audit-logs", verifyToken, verifyAdmin, async (req, res) => {
     try {
-        const logs = await AuditLog.find().sort({ timestamp: -1 }).limit(100);
+        // UPGRADED: Removed .limit(100) so frontend pagination can search ALL logs
+        const logs = await AuditLog.find().sort({ timestamp: -1 });
         res.json(logs);
     } catch (err) {
         res.status(500).json({ error: "Server error" });
