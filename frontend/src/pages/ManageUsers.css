@@ -1,0 +1,70 @@
+/* =====================
+   MANAGE USERS - SPECIFIC STYLES
+   Import this alongside Dashboard.css
+===================== */
+
+/* Password field wrapper — position:relative only, no flex tricks */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* The actual password input gets right padding so text never hides under the icon */
+.password-input-wrapper input {
+    width: 100%;
+    padding-right: 44px;
+    box-sizing: border-box;
+}
+
+/* Eye toggle button — absolutely positioned inside the wrapper */
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    /* Reset all button defaults */
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    cursor: pointer;
+
+    /* Icon appearance */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8c7a60;
+    font-size: 18px;
+    line-height: 1;
+
+    /* Prevent it from stretching the wrapper */
+    height: auto;
+    width: auto;
+}
+
+.password-toggle-btn:hover {
+    color: #c9a84c;
+}
+
+/* Password rules checklist */
+.password-rules {
+    margin: 4px 0 0 0;
+    padding-left: 0;
+    list-style: none;
+    font-size: 12px;
+    text-align: left;
+}
+
+.password-rules li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    color: #8c7a60;
+}
+
+.password-rules li.valid {
+    color: #2ecc71;
+}
