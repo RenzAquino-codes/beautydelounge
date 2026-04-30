@@ -540,8 +540,10 @@ function Stocks() {
     const [stocks, setStocks] = useState([]);
     
     const [selectedItems, setSelectedItems] = useState([]);
-    // NEW: Custom Bulk Delete Modal State
     const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+    
+    // NEW: State for Single Item Deletion
+    const [confirmSingleDelete, setConfirmSingleDelete] = useState(null);
 
     const [categories, setCategories] = useState([]);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -631,7 +633,6 @@ function Stocks() {
         setShowForm(true);
     };
 
-    // --- CATEGORY MANAGEMENT LOGIC ---
     const handleAddCategory = async () => {
         const name = newCategoryName.trim();
         if (!name) return showToast("Please enter a category name.");
@@ -669,7 +670,6 @@ function Stocks() {
         }
     };
 
-    // --- BULK DELETE LOGIC ---
     const toggleSelect = (id) => {
         setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
@@ -679,7 +679,6 @@ function Stocks() {
         else setSelectedItems(filteredStocks.map(item => item._id));
     };
 
-    // UPGRADED: Executes the delete from the Custom Modal
     const executeBulkDelete = async () => {
         setIsSaving(true);
         try {
@@ -688,11 +687,33 @@ function Stocks() {
             ));
             setStocks(stocks.filter(s => !selectedItems.includes(s._id)));
             setSelectedItems([]);
-            setShowBulkDeleteModal(false); // Close Modal
+            setShowBulkDeleteModal(false);
             showToast(`Deleted items successfully.`, "success");
         } catch(e) {
             showToast("Failed to delete some items.");
         }
+        setIsSaving(false);
+    };
+
+    // NEW: Function to execute single deletion
+    const executeSingleDelete = async () => {
+        setIsSaving(true);
+        try {
+            const res = await fetch(`${API}/api/stocks/${confirmSingleDelete}`, { 
+                method: "DELETE", 
+                headers: { "Authorization": `Bearer ${token()}` }
+            });
+            if (res.ok) {
+                setStocks(stocks.filter(s => s._id !== confirmSingleDelete));
+                setSelectedItems(prev => prev.filter(id => id !== confirmSingleDelete)); // Remove from bulk select if checked
+                showToast("Item deleted successfully.", "success");
+            } else {
+                showToast("Failed to delete item.");
+            }
+        } catch(e) {
+            showToast("Failed to delete item.");
+        }
+        setConfirmSingleDelete(null);
         setIsSaving(false);
     };
 
@@ -749,7 +770,6 @@ function Stocks() {
                     </label>
                 </div>
 
-                {/* BULK ACTION BAR */}
                 {selectedItems.length > 0 && (
                     <div className="bulk-action-bar">
                         <span style={{ color: '#c53030', fontWeight: 600 }}>{selectedItems.length} selected</span>
@@ -764,7 +784,6 @@ function Stocks() {
                     Select All
                 </div>
 
-                {/* Main Item Modal */}
                 {showForm && (
                     <div className="modal-overlay">
                         <div className="modal">
@@ -778,13 +797,12 @@ function Stocks() {
 
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <input placeholder="Quantity" type="number" min="1" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} style={{ flex: 1 }} />
-                                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} style={{ flex: 1 }}>
+                                
+                                {/* UPGRADED: Removed unused units */}
+                                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid #dcd5c9' }}>
                                     <option value="">No unit</option>
                                     <option value="pcs">Pieces (pcs)</option>
                                     <option value="bottles">Bottles</option>
-                                    <option value="boxes">Boxes</option>
-                                    <option value="liters">Liters (L)</option>
-                                    <option value="ml">Milliliters (ml)</option>
                                 </select>
                             </div>
 
@@ -801,7 +819,6 @@ function Stocks() {
                     </div>
                 )}
 
-                {/* Manage Categories Modal */}
                 {showCategoryModal && (
                     <div className="modal-overlay">
                         <div className="modal" style={{ maxWidth: '420px' }}>
@@ -825,7 +842,7 @@ function Stocks() {
                                     categories.map(cat => (
                                         <div key={cat._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', marginBottom: '6px', background: '#faf8f5', border: '1px solid #e8e0d4' }}>
                                             <span style={{ color: '#3a3020', fontSize: '14px' }}>{cat.name}</span>
-                                            <button className="icon-btn delete" onClick={() => setConfirmDeleteCategory(cat._id)} style={{ marginLeft: '8px' }}>
+                                            <button className="icon-btn delete" onClick={() => setConfirmDeleteCategory(cat._id)} style={{ marginLeft: '8px', color: '#e74c3c' }}>
                                                 <FaTrash />
                                             </button>
                                         </div>
@@ -839,7 +856,6 @@ function Stocks() {
                     </div>
                 )}
 
-                {/* Confirm Delete Category */}
                 {confirmDeleteCategory && (
                     <div className="modal-overlay">
                         <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
@@ -854,7 +870,6 @@ function Stocks() {
                     </div>
                 )}
 
-                {/* NEW: Custom Confirm Delete Bulk Modal */}
                 {showBulkDeleteModal && (
                     <div className="modal-overlay">
                         <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
@@ -864,6 +879,21 @@ function Stocks() {
                             <div className="modal-actions">
                                 <button onClick={executeBulkDelete} style={{ background: '#e74c3c' }}>Yes, Delete</button>
                                 <button className="cancel-btn" onClick={() => setShowBulkDeleteModal(false)}>Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* NEW: Custom Confirm Modal for Single Item Deletion */}
+                {confirmSingleDelete && (
+                    <div className="modal-overlay">
+                        <div className="modal" style={{ maxWidth: '360px', textAlign: 'center' }}>
+                            <FaTimesCircle style={{ fontSize: '40px', color: '#e74c3c', margin: '0 auto 12px' }} />
+                            <h3 style={{ marginBottom: '8px' }}>Delete Item?</h3>
+                            <p style={{ color: '#8c7a60', fontSize: '14px', marginBottom: '20px' }}>This action cannot be undone.</p>
+                            <div className="modal-actions">
+                                <button onClick={executeSingleDelete} style={{ background: '#e74c3c' }}>Yes, Delete</button>
+                                <button className="cancel-btn" onClick={() => setConfirmSingleDelete(null)}>Cancel</button>
                             </div>
                         </div>
                     </div>
@@ -891,8 +921,11 @@ function Stocks() {
                                         <span className="stock-card-qty" style={{ color: item.quantity < 5 ? '#e74c3c' : '#c9a84c' }}>
                                             {item.quantity} <span className="stock-card-unit">{item.unit}</span>
                                         </span>
-                                        <div className="stock-card-actions">
+                                        
+                                        {/* UPGRADED: Added Single Delete Trash Button next to Edit */}
+                                        <div className="stock-card-actions" style={{ display: 'flex', gap: '8px' }}>
                                             <button className="icon-btn edit" onClick={() => openEdit(item)}><FaEdit /></button>
+                                            <button className="icon-btn delete" onClick={() => setConfirmSingleDelete(item._id)} style={{ color: '#e74c3c' }}><FaTrash /></button>
                                         </div>
                                     </div>
                                 </div>

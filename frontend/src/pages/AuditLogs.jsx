@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaSearch } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 
 function AuditLogs() {
     const navigate = useNavigate();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    // NEW: Search State
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -37,6 +40,17 @@ function AuditLogs() {
         });
     };
 
+    // NEW: Filter the logs dynamically
+    const filteredLogs = logs.filter(log => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            (log.action && log.action.toLowerCase().includes(searchLower)) ||
+            (log.userName && log.userName.toLowerCase().includes(searchLower)) ||
+            (log.role && log.role.toLowerCase().includes(searchLower)) ||
+            (log.details && log.details.toLowerCase().includes(searchLower))
+        );
+    });
+
     return (
         <div className="dashboard-container">
             <aside className="sidebar">
@@ -48,9 +62,26 @@ function AuditLogs() {
             </aside>
 
             <main className="main-content">
-                <header className="dashboard-header">
-                    <h1>System Audit Logs</h1>
-                    <p>Track all critical actions performed by staff and admins.</p>
+                <header className="dashboard-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                        <h1>System Audit Logs</h1>
+                        <p>Track all critical actions performed by staff and admins.</p>
+                    </div>
+                    
+                    {/* NEW: Audit Log Search Bar */}
+                    <div className="filter-controls">
+                        <div className="search-container" style={{ minWidth: '280px' }}>
+                            <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#c9a84c' }}/>
+                            <input 
+                                type="text" 
+                                placeholder="Search user, action, or details..." 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)} 
+                                className="search-input"
+                                style={{ paddingLeft: '35px', width: '100%' }}
+                            />
+                        </div>
+                    </div>
                 </header>
 
                 <div style={{ marginTop: '20px' }}>
@@ -69,8 +100,8 @@ function AuditLogs() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {logs.length > 0 ? (
-                                        logs.map(log => (
+                                    {filteredLogs.length > 0 ? (
+                                        filteredLogs.map(log => (
                                             <tr key={log._id}>
                                                 <td style={{ fontSize: '13px', color: '#6b5c45' }}>{formatDateTime(log.timestamp)}</td>
                                                 <td style={{ fontWeight: 500, textTransform: 'capitalize' }}>{log.userName}</td>
@@ -85,7 +116,9 @@ function AuditLogs() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="5" className="no-results">No audit logs found.</td>
+                                            <td colSpan="5" className="no-results">
+                                                {searchTerm ? `No logs found for "${searchTerm}"` : "No audit logs found."}
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
