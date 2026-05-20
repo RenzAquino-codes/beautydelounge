@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar, FaSearch } from "react-icons/fa";
+import { FaArrowLeft, FaMoneyBillWave, FaChartLine, FaStar } from "react-icons/fa";
 import { HiArrowLeftEndOnRectangle } from "react-icons/hi2";
 import {
     PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, CartesianGrid,
@@ -45,7 +45,6 @@ function Analytics() {
     const [loading, setLoading] = useState(true);
     
     const [selectedChart, setSelectedChart] = useState("All");
-    const [searchTerm, setSearchTerm] = useState("");
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     const handleLogout = () => {
@@ -73,15 +72,7 @@ function Analytics() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const filteredTransactions = transactions.filter(t => {
-        if (!searchTerm) return true;
-        const searchLower = searchTerm.toLowerCase();
-        const clientMatch = t.client?.toLowerCase().includes(searchLower);
-        const serviceMatch = Array.isArray(t.service) 
-            ? t.service.some(s => s?.toLowerCase().includes(searchLower))
-            : t.service?.toLowerCase().includes(searchLower);
-        return clientMatch || serviceMatch;
-    });
+    const filteredTransactions = transactions;
 
     const serviceCount = filteredTransactions.reduce((acc, t) => {
         const serviceList = Array.isArray(t.service) ? t.service : [t.service];
@@ -152,17 +143,6 @@ function Analytics() {
                     </div>
                     
                     <div className="filter-controls">
-                        <div className="search-container">
-                            <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#c9a84c' }}/>
-                            <input 
-                                type="text" 
-                                placeholder="Search client or service..." 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)} 
-                                className="search-input"
-                                style={{ paddingLeft: '35px' }}
-                            />
-                        </div>
                         <div className="category-filter">
                             <select 
                                 value={selectedChart} 
@@ -172,7 +152,7 @@ function Analytics() {
                                 <option value="All">All Analytics</option>
                                 <option value="Monthly Revenue">Monthly Revenue</option>
                                 <option value="Most Availed Services">Most Availed Services</option>
-                                <option value="Earnings By Service">Earnings By Service</option>
+                                <option value="Earnings By Service">Earnings By Services</option>
                                 <option value="Payment Method">Payment Method</option>
                             </select>
                         </div>
@@ -200,7 +180,7 @@ function Analytics() {
 
                         {filteredTransactions.length === 0 ? (
                             <div className="no-data-card">
-                                No analytical data found for "{searchTerm}".
+                                No analytical data found.
                             </div>
                         ) : (
                             <div className="analytics-grid">
